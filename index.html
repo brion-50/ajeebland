@@ -336,10 +336,19 @@ const DEFAULTS = {
     lineDelay:   2.6,        // seconds between lines
     gearSpeed:   1.0,
     vignette:    0.65,
+    lineSpacing: 1.5,        // vertical gap multiplier between lines
+    textWindow:  3,          // how many lines are visible at once (rolling)
     showHints:   true,
     mirrorFrontCam: false,
+    dualCamera:  false,      // attempt both cameras at once (most phones can't)
     invertLR:    false,
-    invertUD:    false
+    invertUD:    false,
+    // walking / step sensitivity (approach & recede)
+    stepEnabled:     true,
+    stepSensitivity: 1.2,    // accel threshold (m/s^2) to register a step
+    stepLength:      0.45,   // metres moved per detected step
+    minDist:         0.8,    // closest the object can get
+    maxDist:         6.0     // farthest the object can recede
   },
   audio: {
     master: 0.55,
@@ -783,11 +792,13 @@ const avatarTex = makeAvatar();
 const mirrorMat = new THREE.MeshBasicMaterial({ map:avatarTex, transparent:true, opacity:0.9 });
 const mirrorPlane=new THREE.Mesh(new THREE.PlaneGeometry(0.44,0.66), mirrorMat);
 mirrorPlane.position.z=-0.005; mirror.add(mirrorPlane);
-mirror.position.set(1.35,0.05,-1.5); mirror.rotation.y=-0.5; rightGroup.add(mirror);
+const MIRROR_SCALE=1.5;
+mirror.scale.setScalar(MIRROR_SCALE);
+mirror.position.set(1.45,0.05,-1.55); mirror.rotation.y=-0.5; rightGroup.add(mirror);
 // hall-of-mirrors echoes
 for(let i=1;i<=3;i++){
-  const echo=ornateFrame(); echo.scale.setScalar(1-i*0.18);
-  echo.position.set(1.35+i*0.18, 0.05, -1.5-i*0.25); echo.rotation.y=-0.5;
+  const echo=ornateFrame(); echo.scale.setScalar((1-i*0.18)*MIRROR_SCALE);
+  echo.position.set(1.45+i*0.18*MIRROR_SCALE, 0.05, -1.55-i*0.25*MIRROR_SCALE); echo.rotation.y=-0.5;
   echo.traverse(o=>{ if(o.material){o.material=o.material.clone(); o.material.opacity*= (0.5-i*0.12);} });
   rightGroup.add(echo);
 }
@@ -910,16 +921,17 @@ let textAnchor=new THREE.Vector3(0,0.25,-2.2);
 let textForward=new THREE.Vector3(0,0,-1);
 function layoutTextStack(lines, anchor, lookFrom){
   clearText();
-  const startY=anchor.y + (lines.length-1)*0.085*0.5 + 0.18;
+  // create a mesh per non-empty line; vertical position is driven each frame
+  // in Narr.update so lines can rise & fade as a rolling window.
   lines.forEach((str,i)=>{
-    if(str.trim()===''){ activeLines.push({empty:true, born:i}); return; }
+    if(str.trim()===''){ activeLines.push({empty:true, index:i}); return; }
     const lm=makeLineMesh(str);
-    lm.mesh.position.copy(anchor);
-    lm.mesh.position.y = startY - i*0.115*CONFIG.look.textSize;
-    // orient to face the canonical front (so straight-on reads flat, sides read angled)
+    lm.mesh.position.set(anchor.x, anchor.y, anchor.z);
     lm.mesh.lookAt(lookFrom);
+    lm.mat.opacity=0;
     textGroup.add(lm.mesh);
-    activeLines.push({mesh:lm.mesh, mat:lm.mat, born:null, index:i, str});
+    activeLines.push({mesh:lm.mesh, mat:lm.mat, index:i, str,
+                      baseQuat:lm.mesh.quaternion.clone()});
   });
 }
 
@@ -928,9 +940,10 @@ function layoutTextStack(lines, anchor, lookFrom){
    =================================================================== */
 const Narr = {
   queue:[], idx:0, lineStart:0, playing:false, key:null,
-  onDone:null,
+  onDone:null, anchorY:0,
   start(lines, anchor, lookFrom, key, onDone){
     this.key=key; this.queue=lines.slice(); this.idx=0; this.playing=true; this.onDone=onDone||null;
+    this.anchorY=anchor.y;
     layoutTextStack(lines, anchor, lookFrom);
     this.lineStart=performance.now();
   },
@@ -938,19 +951,27 @@ const Narr = {
   update(now){
     if(!this.playing) return;
     const delay = CONFIG.look.lineDelay*1000 / Math.max(0.2,CONFIG.look.textSpeed);
-    const elapsed=now-this.lineStart;
-    const reveal = Math.floor(elapsed/delay)+1;
-    // fade each revealed line in
+    const headF = (now-this.lineStart)/delay;   // continuous "newest line" index
+    const step  = 0.115 * CONFIG.look.textSize * CONFIG.look.lineSpacing; // line gap
+    const win   = Math.max(1, CONFIG.look.textWindow); // lines visible at once
+    const fade  = 0.6; // slot fraction spent fading in / out
     activeLines.forEach((l)=>{
-      if(l.empty) return;
-      if(l.index < reveal){
-        const age=(elapsed - (l.index)*delay)/delay; // 0..1 over one slot
-        l.mat.opacity = clamp(lerp(l.mat.opacity, 0.96, 0.06),0,1);
-        // gentle surreal drift settle
-        l.mesh.position.y += Math.sin(now*0.0008 + l.index)*0.00006;
-      }
+      if(l.empty || !l.mesh) return;
+      const age = headF - l.index;            // 0 = just arrived, grows as it ages
+      let op;
+      if(age < 0)            op = 0;                                   // not yet revealed
+      else if(age < fade)    op = age/fade;                           // fade in
+      else if(age < win-fade)op = 1;                                  // hold
+      else if(age < win)     op = Math.max(0,(win-age)/fade);         // fade out & away
+      else                   op = 0;                                  // gone
+      l.mat.opacity = clamp(lerp(l.mat.opacity, op*0.96, 0.18),0,1);
+      // newest line sits at anchor; older lines drift upward as they age
+      const rise = Math.max(0, age) * step;
+      const sway = Math.sin(now*0.0008 + l.index)*0.004;
+      l.mesh.position.y = this.anchorY + rise + sway;
+      l.mesh.visible = l.mat.opacity > 0.003;
     });
-    if(reveal > this.queue.length + 1){
+    if(headF > this.queue.length + win){
       this.playing=false;
       if(this.onDone) this.onDone();
     }
@@ -1043,6 +1064,45 @@ const Orient = {
 };
 
 /* ===================================================================
+   STEPS — a lightweight pedometer (devicemotion peak detection).
+   Each step nudges the viewer toward / away from the object depending
+   on whether they're facing it, so the halo grows or shrinks.
+   =================================================================== */
+const DEFAULT_DIST=2.2;
+let userDist=DEFAULT_DIST, userDistTarget=DEFAULT_DIST;
+const Steps = {
+  have:false, ema:0, prevAbove:false, lastStep:0,
+  init(){
+    window.addEventListener('devicemotion', e=>{
+      const g=e.accelerationIncludingGravity;
+      if(!g || g.x===null) return;
+      this.have=true;
+      const mag=Math.hypot(g.x||0,g.y||0,g.z||0);
+      this.ema = this.ema===0 ? mag : this.ema*0.9 + mag*0.1; // gravity baseline
+      const dyn=Math.abs(mag-this.ema);                       // high-passed motion
+      const now=performance.now();
+      const TH=CONFIG.look.stepSensitivity;
+      const above=dyn>TH;
+      if(above && !this.prevAbove && now-this.lastStep>320){ this.lastStep=now; onStep(); }
+      this.prevAbove=above;
+    });
+  }
+};
+function onStep(){
+  if(!CONFIG.look.stepEnabled || !Orient.refSet) return;
+  const fwdRef=new THREE.Vector3(0,0,-1).applyQuaternion(Orient.refQuat);
+  const look  =new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
+  const dot=look.dot(fwdRef);            // +1 facing object, -1 facing away
+  const s=CONFIG.look.stepLength;
+  if(dot>0.3)       userDistTarget=clamp(userDistTarget-s, CONFIG.look.minDist, CONFIG.look.maxDist);
+  else if(dot<-0.3) userDistTarget=clamp(userDistTarget+s, CONFIG.look.minDist, CONFIG.look.maxDist);
+  // sideways steps don't change distance
+}
+function nudgeDist(d){ // desktop/testing helper
+  userDistTarget=clamp(userDistTarget+d, CONFIG.look.minDist, CONFIG.look.maxDist);
+}
+
+/* ===================================================================
    STATE MACHINE
    =================================================================== */
 const State = { phase:'idle', // idle -> intro -> guide -> ar
@@ -1050,31 +1110,78 @@ const State = { phase:'idle', // idle -> intro -> guide -> ar
 
 let camReady=false;
 
-async function startCamera(){
-  try{
-    const stream=await navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ideal:'environment'}, width:{ideal:1280}, height:{ideal:720} }, audio:false });
-    camVideo.srcObject=stream; await camVideo.play();
-    camReady=true; ditherUniforms.uHasCam.value=1.0;
-    const settings=stream.getVideoTracks()[0].getSettings();
-    ditherUniforms.uTexRes.value.set(settings.width||1280, settings.height||720);
-  }catch(err){ camReady=false; ditherUniforms.uHasCam.value=0.0; console.warn('camera unavailable',err); }
-}
-
-async function tryFrontCamera(){
-  if(!CONFIG.look.mirrorFrontCam) return;
-  if(selfTex) return;
-  try{
-    const stream=await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'user' }, audio:false });
-    selfVideo.srcObject=stream; await selfVideo.play();
-    selfTex=new THREE.VideoTexture(selfVideo);
-    mirrorMat.map=selfTex; mirrorMat.needsUpdate=true;
-  }catch(e){ /* keep avatar */ }
-}
+/* ===================================================================
+   CAMERA MANAGER
+   Most phones can run only ONE camera at a time (especially iOS). So by
+   default we switch: the back camera feeds the dithered world; when you
+   turn to the mirror we swap to the front camera, and when you turn away
+   we swap back to the back camera (the world briefly freezes on its last
+   frame while you're gazing into the mirror). "Try dual camera" attempts
+   to keep both live at once for devices that allow it.
+   =================================================================== */
+const Cam = {
+  envStream:null, selfStream:null, inMirror:false, switching:false, envLive:false,
+  async startEnv(){
+    if(this.envLive) return true;
+    try{
+      const s=await navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ideal:'environment'}, width:{ideal:1280}, height:{ideal:720} }, audio:false });
+      this.envStream=s; camVideo.srcObject=s; await camVideo.play();
+      const st=s.getVideoTracks()[0].getSettings();
+      ditherUniforms.uTexRes.value.set(st.width||1280, st.height||720);
+      ditherUniforms.uHasCam.value=1.0; camReady=true; this.envLive=true;
+      s.getVideoTracks()[0].addEventListener('ended', ()=>{ this.envLive=false; });
+      return true;
+    }catch(err){ camReady=false; ditherUniforms.uHasCam.value=0.0; console.warn('env camera unavailable',err); return false; }
+  },
+  stopEnv(){ if(this.envStream){ this.envStream.getTracks().forEach(t=>t.stop()); this.envStream=null; } this.envLive=false; },
+  async startSelf(){
+    if(this.selfStream) return true;
+    try{
+      const s=await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'user' }, audio:false });
+      this.selfStream=s; selfVideo.srcObject=s; await selfVideo.play();
+      if(!selfTex){ selfTex=new THREE.VideoTexture(selfVideo); selfTex.minFilter=THREE.LinearFilter; }
+      mirrorMat.map=selfTex; mirrorMat.needsUpdate=true;
+      return true;
+    }catch(e){ console.warn('front camera unavailable',e); return false; }
+  },
+  stopSelf(){ if(this.selfStream){ this.selfStream.getTracks().forEach(t=>t.stop()); this.selfStream=null; }
+              mirrorMat.map=avatarTex; mirrorMat.needsUpdate=true; },
+  async enterMirror(){
+    if(!CONFIG.look.mirrorFrontCam || this.inMirror || this.switching) return;
+    this.inMirror=true; this.switching=true;
+    if(CONFIG.look.dualCamera){
+      await this.startSelf();                 // keep env running if the device allows
+      if(!this.envLive){ /* device killed env: degrade silently to switch mode */ }
+    } else {
+      this.stopEnv();                          // free the single camera; world holds last frame
+      const ok=await this.startSelf();
+      if(!ok){ await this.startEnv(); this.inMirror=false; } // no front cam: restore world, keep avatar
+    }
+    this.switching=false;
+  },
+  async leaveMirror(){
+    if(!this.inMirror || this.switching) return;
+    this.inMirror=false; this.switching=true;
+    if(CONFIG.look.dualCamera && this.envLive){
+      /* both still live — leave self running for instant re-entry */
+    } else {
+      this.stopSelf();                         // mirror back to avatar source
+      await this.startEnv();                   // back camera live again
+    }
+    this.switching=false;
+  }
+};
+async function startCamera(){ await Cam.startEnv(); }
 
 async function requestMotion(){
   try{
     if(typeof DeviceOrientationEvent!=='undefined' && typeof DeviceOrientationEvent.requestPermission==='function'){
-      const r=await DeviceOrientationEvent.requestPermission(); // iOS
+      await DeviceOrientationEvent.requestPermission(); // iOS
+    }
+  }catch(e){}
+  try{
+    if(typeof DeviceMotionEvent!=='undefined' && typeof DeviceMotionEvent.requestPermission==='function'){
+      await DeviceMotionEvent.requestPermission(); // iOS accelerometer (steps)
     }
   }catch(e){}
 }
@@ -1083,6 +1190,7 @@ async function enter(){
   document.getElementById('start').style.display='none';
   Audio.init(); Audio.resume();
   await requestMotion();
+  Steps.init();
   await startCamera();
   // set reference orientation after a moment so user has settled forward
   setTimeout(()=>Orient.setRef(), 400);
@@ -1107,6 +1215,7 @@ function beginAR(){
   State.phase='ar'; State.introDone=true;
   document.getElementById('skipBtn').classList.remove('show');
   Orient.setRef(); // recalibrate forward
+  userDist=userDistTarget=DEFAULT_DIST; // reset approach distance
   Audio.play();
   document.getElementById('aboutBtn').classList.add('show');
   document.getElementById('menuTab').classList.add('show');
@@ -1204,12 +1313,13 @@ function loop(){
   camera.quaternion.copy(Orient.curQuat);
 
   // place sculpture along ref-forward (so forward == toward the object)
+  userDist = lerp(userDist, userDistTarget, 0.08); // smooth approach / recede
   if(Orient.refSet){
     const fwd=new THREE.Vector3(0,0,-1).applyQuaternion(Orient.refQuat);
-    SCULPT.position.copy(camera.position).addScaledVector(fwd, 2.2);
+    SCULPT.position.copy(camera.position).addScaledVector(fwd, userDist);
     SCULPT.lookAt(camera.position.x, SCULPT.position.y, camera.position.z);
   } else {
-    SCULPT.position.set(0,0,-2.2);
+    SCULPT.position.set(0,0,-userDist);
   }
 
   // gears + hands + crank animate
@@ -1255,8 +1365,9 @@ function loop(){
     const reveal=Math.floor(lerp(40, TN, dirWeights.left));
     thread.geometry.setDrawRange(0, reveal);
 
-    // right -> try front camera lazily
-    if(dirWeights.right>0.4) tryFrontCamera();
+    // right -> swap to front camera for the mirror; revert to back on leaving
+    if(dirWeights.right>0.55) Cam.enterMirror();
+    else if(dirWeights.right<0.25) Cam.leaveMirror();
 
     // audio reactions
     Audio.setSpiral(dirWeights.up);
@@ -1388,10 +1499,20 @@ function buildMenu(){
   slider(g,'Text size','look','textSize',0.5,2.0,0.05,v=>v.toFixed(2));
   slider(g,'Text speed','look','textSpeed',0.3,3,0.05,v=>v.toFixed(2));
   slider(g,'Line delay (s)','look','lineDelay',0.8,6,0.1,v=>v.toFixed(1));
+  slider(g,'Line spacing','look','lineSpacing',0.8,3,0.05,v=>v.toFixed(2));
+  slider(g,'Lines visible','look','textWindow',1,6,1,v=>v.toFixed(0));
+
+  g=group(look,'Movement (walking)');
+  toggle(g,'Steps move you closer/away','look','stepEnabled');
+  slider(g,'Step sensitivity','look','stepSensitivity',0.4,3.0,0.05,v=>v.toFixed(2));
+  slider(g,'Step length (m)','look','stepLength',0.1,1.0,0.05,v=>v.toFixed(2));
+  slider(g,'Closest (m)','look','minDist',0.4,2.0,0.05,v=>v.toFixed(2));
+  slider(g,'Farthest (m)','look','maxDist',3.0,10.0,0.5,v=>v.toFixed(1));
 
   g=group(look,'Interface');
   toggle(g,'Show hints','look','showHints');
   toggle(g,'Use front camera in mirror','look','mirrorFrontCam');
+  toggle(g,'Try dual camera (both)','look','dualCamera');
   toggle(g,'Invert left / right','look','invertLR');
   toggle(g,'Invert up / down','look','invertUD');
 
@@ -1435,6 +1556,10 @@ function onLiveChange(objKey,key){
     if(key==='rightTint'){ recolorGroup(rightGroup, CONFIG.look.rightTint); }
     if(key==='upTint'){ recolorGroup(upGroup, CONFIG.look.upTint); }
     if(key==='downTint'){ recolorGroup(downGroup, CONFIG.look.downTint); }
+    if(key==='mirrorFrontCam' && !CONFIG.look.mirrorFrontCam && typeof Cam!=='undefined'){
+      // turned off mid-session: drop the front cam and make sure the world is live
+      Cam.inMirror=false; Cam.stopSelf(); if(!Cam.envLive) Cam.startEnv();
+    }
   }
 }
 function rebuildObject(){ buildSculpture(); }
@@ -1485,7 +1610,12 @@ function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg
 Orient.init();
 
 /* ---- if opened on desktop without a tap, still allow preview via Enter key ---- */
-window.addEventListener('keydown',e=>{ if(e.key==='Enter' && State.phase==='idle'){ enter(); } });
+window.addEventListener('keydown',e=>{ if(e.key==='Enter' && State.phase==='idle'){ enter(); }
+  if(State.phase==='ar'){
+    if(e.key==='ArrowUp'){ e.preventDefault(); nudgeDist(-CONFIG.look.stepLength); }
+    if(e.key==='ArrowDown'){ e.preventDefault(); nudgeDist( CONFIG.look.stepLength); }
+  }
+});
 </script>
 </body>
 </html>
