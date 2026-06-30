@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<title>Ajeebland — a portal dreamt by Ajeebsir</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0c0b09;
+    --paper:#f4efe2;
+    --accent:#d9a441;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; padding:0; height:100%; width:100%; overflow:hidden; background:#000; }
+  body{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    color:var(--paper);
+    position:fixed; inset:0;
+    -webkit-user-select:none; user-select:none;
+    overscroll-behavior:none; touch-action:none;
+  }
+  #cam, #selfcam{ position:absolute; width:2px; height:2px; opacity:0; pointer-events:none; left:-10px; top:-10px; }
+  #scene{ position:absolute; inset:0; display:block; }
+  .layer{ position:absolute; inset:0; }
+
+  /* ---------- Start screen ---------- */
+  #start{
+    position:absolute; inset:0; z-index:60;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:radial-gradient(120% 120% at 50% 30%, #1a1814 0%, #000 75%);
+    text-align:center; padding:32px; gap:18px;
+  }
+  #start h1{ font-weight:500; font-size:30px; letter-spacing:.5px; margin:0; }
+  #start .sub{ font-weight:300; font-size:14px; opacity:.7; max-width:340px; line-height:1.6; }
+  #start .glyph{
+    width:120px; height:120px; margin-bottom:6px;
+    border:1px solid rgba(217,164,65,.45); border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 0 50px rgba(217,164,65,.15) inset, 0 0 30px rgba(217,164,65,.1);
+    animation:spin 26s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg);} }
+  #enterBtn{
+    margin-top:10px; padding:14px 30px; border-radius:40px;
+    background:var(--accent); color:#1a1206; border:none;
+    font-family:inherit; font-weight:600; font-size:15px; letter-spacing:.4px;
+    cursor:pointer; box-shadow:0 8px 30px rgba(217,164,65,.3);
+  }
+  #enterBtn:active{ transform:scale(.97); }
+  #permNote{ font-size:11px; opacity:.45; max-width:300px; line-height:1.5; }
+
+  /* ---------- About ---------- */
+  #aboutBtn{
+    position:absolute; top:env(safe-area-inset-top,12px); right:14px; z-index:30;
+    margin-top:10px;
+    width:auto; padding:8px 16px; border-radius:30px;
+    background:rgba(20,18,14,.5); backdrop-filter:blur(8px);
+    border:1px solid rgba(244,239,226,.25); color:var(--paper);
+    font-family:inherit; font-size:12px; letter-spacing:1px; text-transform:lowercase;
+    cursor:pointer; opacity:0; transition:opacity 1.2s ease; pointer-events:none;
+  }
+  #aboutBtn.show{ opacity:.9; pointer-events:auto; }
+  #aboutPanel{
+    position:absolute; inset:0; z-index:55; display:none;
+    background:rgba(8,7,5,.86); backdrop-filter:blur(14px);
+    padding:60px 26px 40px; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  }
+  #aboutPanel.open{ display:block; }
+  #aboutPanel .inner{ max-width:560px; margin:0 auto; }
+  #aboutPanel h2{ font-weight:500; font-size:20px; letter-spacing:.5px; color:var(--accent); }
+  #aboutPanel p{ font-weight:300; font-size:15px; line-height:1.85; opacity:.92; white-space:pre-wrap; }
+  #aboutClose{
+    position:absolute; top:18px; right:18px; width:40px; height:40px; border-radius:50%;
+    background:rgba(244,239,226,.1); border:1px solid rgba(244,239,226,.3);
+    color:var(--paper); font-size:20px; cursor:pointer;
+  }
+
+  /* ---------- Hint ---------- */
+  #hint{
+    position:absolute; left:0; right:0; bottom:calc(env(safe-area-inset-bottom,0) + 22px); z-index:25;
+    text-align:center; font-size:12px; font-weight:300; letter-spacing:.6px;
+    opacity:0; transition:opacity 1s ease; pointer-events:none; color:rgba(244,239,226,.75);
+    text-shadow:0 1px 8px rgba(0,0,0,.7);
+  }
+  #hint.show{ opacity:.85; }
+
+  #skipBtn{
+    position:absolute; left:14px; bottom:calc(env(safe-area-inset-bottom,0) + 16px); z-index:28;
+    padding:8px 14px; border-radius:30px;
+    background:rgba(20,18,14,.5); backdrop-filter:blur(8px);
+    border:1px solid rgba(244,239,226,.25); color:rgba(244,239,226,.85);
+    font-family:'Space Grotesk'; font-size:12px; letter-spacing:1px;
+    cursor:pointer; opacity:0; transition:opacity .8s; pointer-events:none;
+  }
+  #skipBtn.show{ opacity:.8; pointer-events:auto; }
+
+  /* ---------- Menu ---------- */
+  #menu{
+    position:absolute; top:0; right:0; bottom:0; width:min(380px,92vw); z-index:70;
+    background:rgba(14,12,10,.94); backdrop-filter:blur(16px);
+    border-left:1px solid rgba(217,164,65,.25);
+    transform:translateX(105%); transition:transform .35s cubic-bezier(.4,0,.2,1);
+    display:flex; flex-direction:column; font-family:'Inter',sans-serif;
+  }
+  #menu.open{ transform:translateX(0); }
+  #menu .head{
+    padding:16px 18px 10px; display:flex; align-items:center; justify-content:space-between;
+    border-bottom:1px solid rgba(244,239,226,.1);
+  }
+  #menu .head .t{ font-family:'Space Grotesk'; font-size:13px; letter-spacing:2px; color:var(--accent); text-transform:uppercase;}
+  #menu .head .x{ background:none;border:none;color:var(--paper);font-size:20px;cursor:pointer;opacity:.7;}
+  .tabs{ display:flex; gap:4px; padding:10px 14px 0; }
+  .tab{
+    flex:1; padding:9px 6px; text-align:center; font-size:11px; letter-spacing:.6px;
+    background:rgba(244,239,226,.05); border:1px solid rgba(244,239,226,.1); border-bottom:none;
+    border-radius:8px 8px 0 0; color:rgba(244,239,226,.6); cursor:pointer; text-transform:uppercase;
+  }
+  .tab.active{ background:rgba(217,164,65,.14); color:var(--paper); border-color:rgba(217,164,65,.4); }
+  .tabbody{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:14px 16px 30px; }
+  .tabpane{ display:none; }
+  .tabpane.active{ display:block; }
+  .grp{ margin-bottom:16px; }
+  .grp h4{ margin:0 0 8px; font-size:10px; letter-spacing:1.4px; text-transform:uppercase; color:var(--accent); opacity:.85; font-weight:600;}
+  .row{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:11px; }
+  .row label{ font-size:12px; opacity:.85; flex:1; }
+  .row .val{ font-size:11px; opacity:.55; width:42px; text-align:right; font-variant-numeric:tabular-nums; }
+  input[type=range]{ -webkit-appearance:none; appearance:none; width:140px; height:3px; background:rgba(244,239,226,.2); border-radius:3px; outline:none; }
+  input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:var(--accent); cursor:pointer; }
+  input[type=range]::-moz-range-thumb{ width:15px; height:15px; border:none; border-radius:50%; background:var(--accent); cursor:pointer; }
+  input[type=color]{ width:34px; height:24px; border:1px solid rgba(244,239,226,.2); border-radius:6px; background:none; padding:0; cursor:pointer; }
+  input[type=text],select{ background:rgba(244,239,226,.08); color:var(--paper); border:1px solid rgba(244,239,226,.18); border-radius:6px; padding:6px 8px; font-family:inherit; font-size:12px; }
+  .switch{ position:relative; width:40px; height:22px; border-radius:22px; background:rgba(244,239,226,.18); cursor:pointer; transition:.2s; }
+  .switch.on{ background:var(--accent); }
+  .switch .k{ position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; transition:.2s; }
+  .switch.on .k{ left:20px; }
+  .txtblock{ margin-bottom:16px; }
+  .txtblock label{ display:block; font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; opacity:.85;}
+  .txtblock textarea{
+    width:100%; min-height:90px; resize:vertical; background:rgba(244,239,226,.06);
+    color:var(--paper); border:1px solid rgba(244,239,226,.16); border-radius:8px;
+    padding:9px 10px; font-family:'Space Grotesk'; font-size:12px; line-height:1.6;
+  }
+  .btnrow{ display:flex; gap:8px; padding:12px 16px; border-top:1px solid rgba(244,239,226,.1); }
+  .mbtn{ flex:1; padding:11px; border-radius:8px; border:1px solid rgba(217,164,65,.45); background:rgba(217,164,65,.12); color:var(--paper); font-family:inherit; font-size:12px; cursor:pointer; }
+  .mbtn.solid{ background:var(--accent); color:#1a1206; border-color:var(--accent); font-weight:600;}
+  .mbtn:active{ transform:scale(.98); }
+  .hintline{ font-size:10px; opacity:.4; padding:0 16px 14px; line-height:1.5; }
+  #toast{
+    position:absolute; left:50%; bottom:90px; transform:translateX(-50%) translateY(20px);
+    background:rgba(217,164,65,.95); color:#1a1206; padding:10px 18px; border-radius:30px;
+    font-family:'Inter'; font-size:12px; font-weight:600; opacity:0; transition:.3s; z-index:80; pointer-events:none;
+  }
+  #toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  #menuTab{
+    position:absolute; bottom:calc(env(safe-area-inset-bottom,0) + 14px); right:14px; z-index:28;
+    width:44px; height:44px; border-radius:50%;
+    background:rgba(20,18,14,.5); backdrop-filter:blur(8px);
+    border:1px solid rgba(244,239,226,.25); color:var(--paper);
+    font-size:18px; cursor:pointer; opacity:0; transition:opacity 1s; pointer-events:none;
+    display:flex; align-items:center; justify-content:center;
+  }
+  #menuTab.show{ opacity:.7; pointer-events:auto; }
+</style>
+</head>
+<body>
+  <video id="cam" playsinline autoplay muted></video>
+  <video id="selfcam" playsinline autoplay muted></video>
+  <canvas id="scene" class="layer"></canvas>
+
+  <!-- Start / permissions -->
+  <div id="start">
+    <div class="glyph">
+      <svg width="86" height="86" viewBox="0 0 100 100" fill="none" stroke="#d9a441" stroke-width="1.1">
+        <circle cx="50" cy="50" r="34"/><circle cx="50" cy="50" r="22"/><circle cx="50" cy="50" r="9"/>
+        <g stroke-width=".8">
+          <path d="M50 16 L50 28 M50 72 L50 84 M16 50 L28 50 M72 50 L84 50"/>
+          <path d="M26 26 L34 34 M66 66 L74 74 M74 26 L66 34 M34 66 L26 74"/>
+        </g>
+        <circle cx="50" cy="16" r="2"/><circle cx="50" cy="84" r="2"/><circle cx="16" cy="50" r="2"/><circle cx="84" cy="50" r="2"/>
+      </svg>
+    </div>
+    <h1>Ajeebland</h1>
+    <div class="sub">A portal dreamt by Ajeebsir — a being between hand and machine. Hold your phone up to the glass, and let the object speak.</div>
+    <button id="enterBtn">enter the portal</button>
+    <div id="permNote">This experience uses your camera and motion sensors. Best on a phone, held upright. Press <b>m</b> at any time for the behind-the-scenes menu.</div>
+  </div>
+
+  <!-- UI -->
+  <button id="aboutBtn">about</button>
+  <div id="aboutPanel"><button id="aboutClose">×</button><div class="inner"><h2>about this object</h2><p id="aboutText"></p></div></div>
+  <div id="hint"></div>
+  <button id="skipBtn">skip ▸</button>
+  <button id="menuTab">≡</button>
+  <div id="toast"></div>
+
+  <!-- Menu -->
+  <div id="menu">
+    <div class="head"><span class="t">behind the scenes</span><button class="x" id="menuClose">×</button></div>
+    <div class="tabs">
+      <div class="tab active" data-tab="look">Appearance</div>
+      <div class="tab" data-tab="text">Text</div>
+      <div class="tab" data-tab="audio">Audio</div>
+    </div>
+    <div class="tabbody">
+      <div class="tabpane active" id="pane-look"></div>
+      <div class="tabpane" id="pane-text"></div>
+      <div class="tabpane" id="pane-audio"></div>
+    </div>
+    <div class="btnrow">
+      <button class="mbtn" id="resetBtn">Reset</button>
+      <button class="mbtn solid" id="exportBtn">Save into HTML ↓</button>
+    </div>
+    <div class="hintline">“Save into HTML” bakes every current setting and edited text into a downloadable copy of this file, so you can send it on and it re-opens exactly the same.</div>
+  </div>
+
+<!-- ============================ EMBEDDED CONFIG ============================ -->
+<script id="embedded-config">
+/*__CONFIG_START__*/
+window.EMBEDDED_CONFIG = null;
+/*__CONFIG_END__*/
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* =====================================================================
+   AJEEBLAND  —  browser AR portal
+   Narrated by Ajeebsir.  Single-file, portable, parameter-persistent.
+   Drives entirely off device orientation (rotation). Camera = back lens.
+   ===================================================================== */
+
+/* ----------------------------- DEFAULTS ----------------------------- */
+const DEFAULT_TEXTS = {
+  intro: [
+    "Hello and welcome to Ajeebland,",
+    "This is a speculative piece of us —",
+    "a computing object existing in an alternate reality.",
+    "Functionally it calculates the relationship",
+    "between the planets, the body,",
+    "and the attributes of the spirit and god.",
+    "It is an object but also a living thing.",
+    "It is an object you can ask a question",
+    "and it will give answers.",
+    "It reveals knowledge.",
+    "In this world it is a reminder of the interdependency",
+    "of the macro- and the micro- scale.",
+    "There are rituals around using it,",
+    "around interacting with it.",
+    "Through this storefront I can only guide you so far.",
+    "This is only a portal, a dream, a representation of it.",
+    "If you want to know more,",
+    "you would have to look within."
+  ],
+  guide: [
+    "let me guide you.",
+    "look at what is around you."
+  ],
+  forward: [
+    "what is in between you and the piece?",
+    "this glass is a — is a — is a",
+    "guardian.",
+    "it guards the sacred space",
+    "between you and the object.",
+    "take a closer look, and listen —",
+    "and you will hear the music."
+  ],
+  left: [
+    "if you turn to the left long enough",
+    "you will see your back.",
+    "and the back is where the future lies.",
+    "the future's orientation is the cycle:",
+    "your back, your shoulders, your arms —",
+    "they shrink and they grow.",
+    "it's a cycle.",
+    "",
+    "in this world we care about different things.",
+    "if we make computers from a place",
+    "there are different kinds of calculation.",
+    "throughout antiquity many computers have been made,",
+    "each revealing the aspirations of its creators.",
+    "what if we built ones that show us",
+    "the knowledge of relations?"
+  ],
+  right: [
+    "if you turn to the right,",
+    "you see a mirror of yourself.",
+    "but —",
+    "it shows multiples, it shows multiples.",
+    "it's like an ebb and flow",
+    "of the multiples."
+  ],
+  up: [
+    "the sky is a great place.",
+    "it is expansive, and if you look closely",
+    "it will envelop you,",
+    "and you will be lifted high.",
+    "feel yourself being lifted up.",
+    "and the sky has planets and stars,",
+    "which remind us of things bigger than ourselves —",
+    "yet somehow we're connected."
+  ],
+  down: [
+    "the bottom is the earth,",
+    "which doesn't move,",
+    "but is very fertile",
+    "for roots to grow."
+  ],
+  about:
+    "this is an analogue computer.\n\nit has inputs.\nthe inputs here are all based on rotations.\nthe input is one rotation;\nthe output is the rotation of different cycles.\n\nthere are 5 cycles in this object:\n\n— the solar cycle of 52 weeks.\n— a handcrank that turns the passage of time; it relates to the lunar cycle.\n— a cycle that governs the replenishment of the tissues.\n— the 99 attributes and characteristics associated with god.\n— and a cycle associated with my menstrual cycle.\n\nthe gears contain the rations of the cycles. each spin of the handcrank turns the gears and the clock hands to show where in each cycle we are, and its relationship to one another."
+};
+
+const DEFAULTS = {
+  look: {
+    ditherAmount: 0.9,
+    pixelSize: 5.0,
+    desaturation: 0.85,
+    haloRadius: 0.95,      // world metres around sculpture
+    haloSoftness: 0.45,
+    tintStrength: 0.6,
+    baseTint:    "#cdd2c8",
+    forwardTint: "#efe7d2",
+    leftTint:    "#36c089",  // green
+    rightTint:   "#d23bcf",  // magenta
+    upTint:      "#5f7bff",  // sky blue
+    downTint:    "#b87231",  // earth ochre
+    wireColor:   "#ece5d3",
+    hennaColor:  "#f3d9a8",
+    accentColor: "#d9a441",
+    textColor:   "#f6f1e4",
+    textSize:    1.0,
+    textSpeed:   1.0,        // glyph reveal multiplier
+    lineDelay:   2.6,        // seconds between lines
+    gearSpeed:   1.0,
+    vignette:    0.65,
+    showHints:   true,
+    mirrorFrontCam: false,
+    invertLR:    false,
+    invertUD:    false
+  },
+  audio: {
+    master: 0.55,
+    droneOn: true,
+    droneFreq: 110,
+    shimmer: 0.5
+  },
+  texts: JSON.parse(JSON.stringify(DEFAULT_TEXTS))
+};
+
+/* ---- merge config: embedded > localStorage > defaults ---- */
+function deepMerge(base, over){
+  if(!over) return JSON.parse(JSON.stringify(base));
+  const out = Array.isArray(base) ? base.slice() : Object.assign({}, base);
+  for(const k in over){
+    if(over[k] && typeof over[k]==='object' && !Array.isArray(over[k]) && base[k]){
+      out[k] = deepMerge(base[k], over[k]);
+    } else { out[k] = over[k]; }
+  }
+  return out;
+}
+let stored = null;
+try { stored = JSON.parse(localStorage.getItem('ajeebland_config')); } catch(e){}
+const CONFIG = deepMerge(DEFAULTS, window.EMBEDDED_CONFIG || stored || null);
+// ensure all text keys exist
+for(const k in DEFAULT_TEXTS){ if(CONFIG.texts[k]===undefined) CONFIG.texts[k]=DEFAULT_TEXTS[k]; }
+
+function saveLocal(){ try{ localStorage.setItem('ajeebland_config', JSON.stringify(CONFIG)); }catch(e){} }
+
+/* helper */
+const hx = h => { const c=new THREE.Color(h); return c; };
+const lerp=(a,b,t)=>a+(b-a)*t;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const smooth=(e0,e1,x)=>{ const t=clamp((x-e0)/(e1-e0),0,1); return t*t*(3-2*t); };
+
+/* ===================================================================
+   HENNA TEXTURE GENERATOR  (procedural mandalas inspired by the brief)
+   =================================================================== */
+function rng(seed){ let s=seed>>>0; return ()=>{ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
+
+function makeHenna(seed, colorHex){
+  const S=512, cv=document.createElement('canvas'); cv.width=cv.height=S;
+  const x=cv.getContext('2d'); const R=rng(seed);
+  x.clearRect(0,0,S,S);
+  const cx=S/2, cy=S/2;
+  x.strokeStyle=colorHex; x.fillStyle=colorHex;
+  x.lineCap='round'; x.lineJoin='round';
+  const petals = 6 + Math.floor(R()*6);
+  // concentric dotted rings
+  const rings = 2 + Math.floor(R()*3);
+  for(let r=0;r<rings;r++){
+    const rad = S*0.20 + r*S*0.11;
+    const dots = 14 + Math.floor(R()*16);
+    for(let i=0;i<dots;i++){
+      const a = i/dots*Math.PI*2;
+      const dr = (i%2===0)? 2.6 : 1.6;
+      x.beginPath(); x.arc(cx+Math.cos(a)*rad, cy+Math.sin(a)*rad, dr, 0, Math.PI*2); x.fill();
+    }
+  }
+  // central flower
+  x.lineWidth=3.2;
+  for(let p=0;p<petals;p++){
+    const a = p/petals*Math.PI*2 + R()*0.1;
+    const len = S*0.18*(0.85+R()*0.3);
+    const tx=cx+Math.cos(a)*len, ty=cy+Math.sin(a)*len;
+    const w = len*0.4;
+    const px=cx+Math.cos(a+Math.PI/2)*w, py=cy+Math.sin(a+Math.PI/2)*w;
+    const qx=cx+Math.cos(a-Math.PI/2)*w, qy=cy+Math.sin(a-Math.PI/2)*w;
+    x.beginPath(); x.moveTo(cx,cy);
+    x.quadraticCurveTo(px,py,tx,ty);
+    x.quadraticCurveTo(qx,qy,cx,cy); x.stroke();
+    // petal tip dot
+    x.beginPath(); x.arc(tx,ty,2.6,0,Math.PI*2); x.fill();
+  }
+  // outer radiating sunrays of dots
+  const rays = petals*2;
+  for(let i=0;i<rays;i++){
+    const a=i/rays*Math.PI*2;
+    for(let d=0; d<4; d++){
+      const rad = S*0.40 + d*7;
+      x.beginPath(); x.arc(cx+Math.cos(a)*rad, cy+Math.sin(a)*rad, 1.6-(d*0.2),0,Math.PI*2); x.fill();
+    }
+  }
+  // little swirling vines between petals
+  x.lineWidth=2.0;
+  for(let p=0;p<petals;p++){
+    const a=(p+0.5)/petals*Math.PI*2;
+    const r0=S*0.26, r1=S*0.36;
+    const sx=cx+Math.cos(a)*r0, sy=cy+Math.sin(a)*r0;
+    const ex=cx+Math.cos(a+0.3)*r1, ey=cy+Math.sin(a+0.3)*r1;
+    const mx=cx+Math.cos(a+0.15)*r1*1.05, my=cy+Math.sin(a+0.15)*r1*1.05;
+    x.beginPath(); x.moveTo(sx,sy); x.quadraticCurveTo(mx,my,ex,ey); x.stroke();
+  }
+  // centre eye
+  x.beginPath(); x.arc(cx,cy,S*0.06,0,Math.PI*2); x.stroke();
+  x.beginPath(); x.arc(cx,cy,S*0.025,0,Math.PI*2); x.fill();
+  const tex=new THREE.CanvasTexture(cv);
+  tex.anisotropy=4;
+  return tex;
+}
+
+/* ===================================================================
+   THREE.JS  CORE
+   =================================================================== */
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true, preserveDrawingBuffer:false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.autoClear = false;
+
+const W = ()=>window.innerWidth, H = ()=>window.innerHeight;
+renderer.setSize(W(),H());
+
+// perspective scene (the AR world)
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(68, W()/H(), 0.01, 100);
+scene.add(camera);
+scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+const key = new THREE.PointLight(0xffe8c0, 1.1, 30); key.position.set(2,4,2); scene.add(key);
+
+// background (camera feed) — orthographic full-screen quad with dither shader
+const bgScene = new THREE.Scene();
+const bgCam = new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+const camVideo = document.getElementById('cam');
+const camTex = new THREE.VideoTexture(camVideo);
+camTex.minFilter=THREE.LinearFilter; camTex.magFilter=THREE.LinearFilter;
+
+const ditherUniforms = {
+  uTex:{value:camTex},
+  uRes:{value:new THREE.Vector2(W(),H())},
+  uTexRes:{value:new THREE.Vector2(16,9)},
+  uHaloCenter:{value:new THREE.Vector2(0.5,0.5)},
+  uHaloR:{value:0.3},
+  uSoft:{value:CONFIG.look.haloSoftness},
+  uDither:{value:CONFIG.look.ditherAmount},
+  uPixel:{value:CONFIG.look.pixelSize},
+  uDesat:{value:CONFIG.look.desaturation},
+  uTint:{value:hx(CONFIG.look.baseTint)},
+  uTintAmt:{value:0.0},
+  uVignette:{value:CONFIG.look.vignette},
+  uTime:{value:0},
+  uHasCam:{value:0.0},
+  uWaves:{value:0.0},    // left state weaving waves
+  uWaveCol:{value:hx(CONFIG.look.leftTint)},
+  uGray:{value:0.0}      // intro/forward global desat push
+};
+
+const bgMat = new THREE.ShaderMaterial({
+  uniforms: ditherUniforms,
+  depthTest:false, depthWrite:false,
+  vertexShader:`
+    varying vec2 vUv;
+    void main(){ vUv=uv; gl_Position=vec4(position.xy,0.0,1.0); }
+  `,
+  fragmentShader:`
+    precision highp float;
+    varying vec2 vUv;
+    uniform sampler2D uTex;
+    uniform vec2 uRes, uTexRes;
+    uniform vec2 uHaloCenter;
+    uniform float uHaloR, uSoft, uDither, uPixel, uDesat, uTintAmt, uVignette, uTime, uHasCam, uWaves, uGray;
+    uniform vec3 uTint, uWaveCol;
+
+    float bayer4(vec2 p){
+      int x=int(mod(p.x,4.0)); int y=int(mod(p.y,4.0));
+      int idx=x+y*4;
+      float m[16];
+      m[0]=0.0;m[1]=8.0;m[2]=2.0;m[3]=10.0;
+      m[4]=12.0;m[5]=4.0;m[6]=14.0;m[7]=6.0;
+      m[8]=3.0;m[9]=11.0;m[10]=1.0;m[11]=9.0;
+      m[12]=15.0;m[13]=7.0;m[14]=13.0;m[15]=5.0;
+      float v=0.0;
+      for(int i=0;i<16;i++){ if(i==idx) v=m[i]; }
+      return (v+0.5)/16.0;
+    }
+    // aspect-correct uv so the camera image covers the screen
+    vec2 coverUv(vec2 uv){
+      float sa = uRes.x/uRes.y;
+      float ta = uTexRes.x/uTexRes.y;
+      vec2 s = vec2(1.0);
+      if(sa>ta){ s.y = ta/sa; } else { s.x = sa/ta; }
+      return (uv-0.5)*s+0.5;
+    }
+    void main(){
+      vec2 uv = vUv;
+      vec2 cuv = coverUv(uv);
+
+      vec3 cam;
+      if(uHasCam>0.5){ cam = texture2D(uTex, cuv).rgb; }
+      else {
+        // graceful fallback gradient when no camera
+        float g = 0.12 + 0.10*sin(uv.y*8.0+uTime*0.4) ;
+        cam = vec3(0.08,0.09,0.10) + g*vec3(0.2,0.22,0.18);
+      }
+
+      // distance from halo centre (aspect corrected so halo is circular)
+      float aspect = uRes.x/uRes.y;
+      vec2 d = (uv-uHaloCenter); d.x*=aspect;
+      float dist = length(d);
+      // 0 inside halo, 1 fully outside
+      float outside = smoothstep(uHaloR, uHaloR*(1.0+uSoft)+0.001, dist);
+
+      // ---- outside treatment : pixelate + desaturate + dither ----
+      vec2 px = (uPixel)/uRes;
+      vec2 puv = floor(cuv/px)*px + px*0.5;
+      vec3 pcam = (uHasCam>0.5)? texture2D(uTex,puv).rgb : cam;
+      float lum = dot(pcam, vec3(0.299,0.587,0.114));
+      vec3 desat = mix(pcam, vec3(lum), uDesat);
+      // ordered dithering / posterize
+      float b = bayer4(gl_FragCoord.xy);
+      float levels = mix(8.0, 3.0, uDither);
+      vec3 dith = floor(desat*levels + (b-0.5))/ (levels-1.0);
+      dith = clamp(dith,0.0,1.0);
+      vec3 outer = mix(desat, dith, uDither);
+
+      vec3 col = mix(cam, outer, outside);
+
+      // weaving waves (left state) overlaid on background
+      if(uWaves>0.001){
+        float w = sin(uv.x*22.0 + uTime*1.3 + sin(uv.y*9.0+uTime*0.7)*2.0);
+        float w2= sin(uv.y*18.0 - uTime*1.0 + uv.x*6.0);
+        float weave = smoothstep(0.55,0.95, abs(w)*0.5+abs(w2)*0.5);
+        col = mix(col, uWaveCol, weave*uWaves*0.5*outside);
+      }
+
+      // global gray push (intro / forward focus pulls life out of the edges)
+      float lum2 = dot(col,vec3(0.299,0.587,0.114));
+      col = mix(col, vec3(lum2), uGray*outside);
+
+      // directional tint
+      col = mix(col, col*uTint*1.6, uTintAmt);
+      col = mix(col, uTint, uTintAmt*0.25);
+
+      // vignette
+      float vig = smoothstep(1.15, 0.35, length((uv-0.5)*vec2(aspect,1.0)));
+      col *= mix(1.0, vig, uVignette);
+
+      gl_FragColor = vec4(col,1.0);
+    }
+  `
+});
+const bgQuad = new THREE.Mesh(new THREE.PlaneGeometry(2,2), bgMat);
+bgScene.add(bgQuad);
+
+/* ===================================================================
+   THE OBJECT — wireframe Bangladeshi gear-computer
+   ~0.6m tall (2ft) x ~0.3m wide (1ft), placed in front along ref-forward
+   =================================================================== */
+const SCULPT = new THREE.Group();
+scene.add(SCULPT);
+const gearMeshes = [];
+let handcrank=null;
+const clockHands=[];
+
+function buildSculpture(){
+  while(SCULPT.children.length) SCULPT.remove(SCULPT.children[0]);
+  gearMeshes.length=0; clockHands.length=0; handcrank=null;
+  const wire = hx(CONFIG.look.wireColor);
+  const accent = hx(CONFIG.look.accentColor);
+
+  // outer frame box (wireframe) 0.30 w x 0.60 h x 0.26 d
+  const box = new THREE.BoxGeometry(0.30,0.60,0.26);
+  const frame = new THREE.LineSegments(new THREE.EdgesGeometry(box),
+    new THREE.LineBasicMaterial({color:wire, transparent:true, opacity:0.55}));
+  SCULPT.add(frame);
+  // inner cross-struts for an "ancient machine" feel
+  const strutMat = new THREE.LineBasicMaterial({color:wire, transparent:true, opacity:0.3});
+  for(let i=-1;i<=1;i++){
+    const g=new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-0.15,i*0.2,-0.13), new THREE.Vector3(0.15,i*0.2,0.13)]);
+    SCULPT.add(new THREE.LineSegments(g,strutMat));
+  }
+
+  // the five cycle-gears (different radii) + henna faces
+  const gearSpecs = [
+    {r:0.115, teeth:34, y: 0.17, z:0.07, seed:11, label:'solar'},
+    {r:0.085, teeth:24, y: 0.04, z:0.10, seed:23, label:'lunar'},
+    {r:0.065, teeth:18, y:-0.07, z:0.06, seed:31, label:'tissue'},
+    {r:0.095, teeth:28, y:-0.17, z:0.09, seed:47, label:'99'},
+    {r:0.055, teeth:16, y: 0.07, z:0.12, seed:59, label:'menses'}
+  ];
+  gearSpecs.forEach((s,i)=>{
+    const grp = makeGear(s, wire, accent);
+    grp.position.set( (i%2===0? -0.04: 0.05) + (i*0.005), s.y, s.z);
+    grp.userData.speed = (i%2===0?1:-1) * (0.25 - i*0.03);
+    SCULPT.add(grp); gearMeshes.push(grp);
+  });
+
+  // handcrank on the right side
+  handcrank = new THREE.Group();
+  const armMat = new THREE.LineBasicMaterial({color:accent});
+  const arm = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0.07,0,0)]);
+  handcrank.add(new THREE.LineSegments(arm, armMat));
+  const knob = new THREE.Mesh(new THREE.SphereGeometry(0.012,8,8),
+    new THREE.MeshBasicMaterial({color:accent, wireframe:true}));
+  knob.position.set(0.07,0,0); handcrank.add(knob);
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.006,0.006,0.05,8),
+    new THREE.MeshBasicMaterial({color:wire, wireframe:true}));
+  shaft.rotation.z=Math.PI/2; shaft.position.set(-0.025,0,0); handcrank.add(shaft);
+  handcrank.position.set(0.16, 0.04, 0.04);
+  SCULPT.add(handcrank);
+
+  // two clock dials with hands (top + bottom)
+  [[0.0,0.255,0.085,'top'],[0.0,-0.275,0.07,'bot']].forEach(d=>{
+    const dial=new THREE.Group();
+    const ring=new THREE.LineLoop(new THREE.CircleGeometry(d[2],32),
+      new THREE.LineBasicMaterial({color:wire,transparent:true,opacity:0.7}));
+    // CircleGeometry includes a center vertex; trim it for a clean loop
+    const pts=[]; for(let a=0;a<=32;a++){ const th=a/32*Math.PI*2; pts.push(new THREE.Vector3(Math.cos(th)*d[2],Math.sin(th)*d[2],0)); }
+    ring.geometry=new THREE.BufferGeometry().setFromPoints(pts);
+    dial.add(ring);
+    // ticks
+    for(let t=0;t<12;t++){ const a=t/12*Math.PI*2;
+      const g=new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(Math.cos(a)*d[2]*0.82,Math.sin(a)*d[2]*0.82,0),
+        new THREE.Vector3(Math.cos(a)*d[2],Math.sin(a)*d[2],0)]);
+      dial.add(new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:wire,transparent:true,opacity:0.5})));
+    }
+    const hand=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0),new THREE.Vector3(0,d[2]*0.7,0)]);
+    const handMesh=new THREE.LineSegments(hand,new THREE.LineBasicMaterial({color:accent}));
+    dial.add(handMesh); clockHands.push(handMesh);
+    dial.position.set(d[0],d[1],d[3]);
+    SCULPT.add(dial);
+  });
+
+  applyWireColors();
+}
+
+function makeGear(spec, wireCol, accent){
+  const g=new THREE.Group();
+  const {r,teeth,seed}=spec;
+  // gear outline (toothed) as a line loop
+  const pts=[];
+  const inner=r*0.86, outer=r;
+  const seg=teeth*2;
+  for(let i=0;i<=seg;i++){
+    const a=i/seg*Math.PI*2;
+    const rad = (i%2===0)? outer : inner;
+    pts.push(new THREE.Vector3(Math.cos(a)*rad, Math.sin(a)*rad, 0));
+  }
+  const gear=new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts),
+    new THREE.LineBasicMaterial({color:wireCol, transparent:true, opacity:0.8}));
+  g.add(gear);
+  // hub
+  const hubPts=[]; for(let i=0;i<=24;i++){ const a=i/24*Math.PI*2; hubPts.push(new THREE.Vector3(Math.cos(a)*r*0.22,Math.sin(a)*r*0.22,0)); }
+  g.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(hubPts),
+    new THREE.LineBasicMaterial({color:accent, transparent:true, opacity:0.9})));
+  // spokes
+  for(let s=0;s<6;s++){ const a=s/6*Math.PI*2;
+    const sp=new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(Math.cos(a)*r*0.22,Math.sin(a)*r*0.22,0),
+      new THREE.Vector3(Math.cos(a)*r*0.82,Math.sin(a)*r*0.82,0)]);
+    g.add(new THREE.LineSegments(sp,new THREE.LineBasicMaterial({color:wireCol,transparent:true,opacity:0.4})));
+  }
+  // henna face (procedural mandala on a transparent disc)
+  const tex = makeHenna(seed, CONFIG.look.hennaColor);
+  const face=new THREE.Mesh(new THREE.CircleGeometry(r*0.92,40),
+    new THREE.MeshBasicMaterial({map:tex, transparent:true, opacity:0.92, depthWrite:false, side:THREE.DoubleSide}));
+  face.position.z=-0.001;
+  face.userData.henna=true;
+  g.add(face);
+  g.userData.faceTex=tex;
+  return g;
+}
+
+function applyWireColors(){
+  const wire=hx(CONFIG.look.wireColor), accent=hx(CONFIG.look.accentColor);
+  SCULPT.traverse(o=>{
+    if(o.material && o.material.color && !o.userData.henna && o.type!=='Mesh'){
+      // keep accent items accent-ish: simple heuristic by current luminance not robust;
+      // instead recolor all lines to wire, accent items handled at build. Skip recolor of meshes.
+    }
+  });
+}
+
+buildSculpture();
+
+/* ===================================================================
+   DIRECTIONAL DREAM VISUALS (groups that fade with orientation)
+   =================================================================== */
+// --- LEFT: wireframe gyroscope + ball of thread unfolding ---
+const leftGroup = new THREE.Group(); scene.add(leftGroup); leftGroup.visible=false;
+const gyro = new THREE.Group();
+[ [0,0,0],[Math.PI/2,0,0],[0,Math.PI/2,0] ].forEach((rot,i)=>{
+  const pts=[]; for(let a=0;a<=64;a++){ const th=a/64*Math.PI*2; pts.push(new THREE.Vector3(Math.cos(th)*0.25,Math.sin(th)*0.25,0)); }
+  const ring=new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts),
+    new THREE.LineBasicMaterial({color:hx(CONFIG.look.leftTint), transparent:true, opacity:0.8}));
+  ring.rotation.set(rot[0],rot[1],rot[2]); ring.userData.axis=i; gyro.add(ring);
+});
+gyro.position.set(-1.3,0.1,-1.6); leftGroup.add(gyro);
+// ball of thread (a single long line wound on a sphere, "unfolds" via draw range)
+const threadPts=[]; const TN=1400;
+for(let i=0;i<TN;i++){
+  const t=i/TN; const ph=t*Math.PI*40; const th=Math.acos(1-2*t);
+  const rr=0.18*(1.0 - t*0.15);
+  threadPts.push(new THREE.Vector3(Math.sin(th)*Math.cos(ph)*rr, Math.cos(th)*rr, Math.sin(th)*Math.sin(ph)*rr));
+}
+const threadGeo=new THREE.BufferGeometry().setFromPoints(threadPts);
+const thread=new THREE.Line(threadGeo, new THREE.LineBasicMaterial({color:hx(CONFIG.look.leftTint),transparent:true,opacity:0.85}));
+thread.position.set(-1.0,-0.25,-1.4); leftGroup.add(thread);
+
+// --- RIGHT: ornate mirror with self / pixel avatar ---
+const rightGroup=new THREE.Group(); scene.add(rightGroup); rightGroup.visible=false;
+const mirror=new THREE.Group();
+// ornate frame
+function ornateFrame(){
+  const f=new THREE.Group(); const col=hx(CONFIG.look.rightTint);
+  const w=0.5,h=0.75;
+  const rect=new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-w/2,-h/2,0),new THREE.Vector3(w/2,-h/2,0),
+    new THREE.Vector3(w/2,h/2,0),new THREE.Vector3(-w/2,h/2,0)]),
+    new THREE.LineBasicMaterial({color:col,transparent:true,opacity:0.85}));
+  f.add(rect);
+  // arabesque scallops around the frame
+  for(let side=0;side<4;side++){
+    const n=6; for(let i=0;i<n;i++){
+      const t=(i+0.5)/n;
+      let bx,by,nx,ny;
+      if(side===0){bx=lerp(-w/2,w/2,t);by=h/2; nx=0;ny=1;}
+      else if(side===1){bx=w/2;by=lerp(h/2,-h/2,t);nx=1;ny=0;}
+      else if(side===2){bx=lerp(w/2,-w/2,t);by=-h/2;nx=0;ny=-1;}
+      else {bx=-w/2;by=lerp(-h/2,h/2,t);nx=-1;ny=0;}
+      const pts=[]; for(let a=0;a<=16;a++){ const th=a/16*Math.PI; pts.push(new THREE.Vector3(bx+nx*0.05+Math.cos(th)*0.035*ny+ -ny*Math.cos(th)*0.0, by+ny*0.05+Math.sin(th)*0.05*Math.abs(nx?1:1),0)); }
+      const sc=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(bx,by,0),
+        new THREE.Vector3(bx+nx*0.06+(side%2?0: (t-0.5)*0.04), by+ny*0.06+(side%2?(t-0.5)*0.04:0),0),
+        new THREE.Vector3(bx+nx*0.03,by+ny*0.03,0)
+      ]), new THREE.LineBasicMaterial({color:col,transparent:true,opacity:0.5}));
+      f.add(sc);
+    }
+  }
+  // top crest
+  const crest=[]; for(let a=0;a<=20;a++){const th=Math.PI*(a/20); crest.push(new THREE.Vector3(Math.cos(th)*0.12, h/2+Math.sin(th)*0.12,0));}
+  f.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(crest),new THREE.LineBasicMaterial({color:col,transparent:true,opacity:0.7})));
+  return f;
+}
+mirror.add(ornateFrame());
+// reflective plane: shows self cam OR pixel avatar
+const selfVideo=document.getElementById('selfcam');
+let selfTex=null;
+const avatarTex = makeAvatar();
+const mirrorMat = new THREE.MeshBasicMaterial({ map:avatarTex, transparent:true, opacity:0.9 });
+const mirrorPlane=new THREE.Mesh(new THREE.PlaneGeometry(0.44,0.66), mirrorMat);
+mirrorPlane.position.z=-0.005; mirror.add(mirrorPlane);
+mirror.position.set(1.35,0.05,-1.5); mirror.rotation.y=-0.5; rightGroup.add(mirror);
+// hall-of-mirrors echoes
+for(let i=1;i<=3;i++){
+  const echo=ornateFrame(); echo.scale.setScalar(1-i*0.18);
+  echo.position.set(1.35+i*0.18, 0.05, -1.5-i*0.25); echo.rotation.y=-0.5;
+  echo.traverse(o=>{ if(o.material){o.material=o.material.clone(); o.material.opacity*= (0.5-i*0.12);} });
+  rightGroup.add(echo);
+}
+
+function makeAvatar(){
+  const S=64, cv=document.createElement('canvas'); cv.width=cv.height=S;
+  const x=cv.getContext('2d'); x.imageSmoothingEnabled=false;
+  // 8-bit alien cyborg being
+  const P={ bg:'#1a0f1f', skin:'#7be0c0', skin2:'#46b9a0', eye:'#ffe27a', plate:'#d23bcf', dark:'#241133' };
+  x.fillStyle=P.bg; x.fillRect(0,0,S,S);
+  const px=(cx,cy,w,h,c)=>{ x.fillStyle=c; x.fillRect(cx,cy,w,h); };
+  // head
+  px(20,14,24,28,P.skin); px(20,14,24,6,P.skin2);
+  // antennae
+  px(24,6,3,8,P.plate); px(37,6,3,8,P.plate); px(23,4,5,3,P.eye); px(36,4,5,3,P.eye);
+  // eyes (large)
+  px(24,24,6,7,P.eye); px(34,24,6,7,P.eye); px(26,26,2,3,'#1a0f1f'); px(36,26,2,3,'#1a0f1f');
+  // cyber plate cheek
+  px(20,32,6,6,P.plate); px(38,32,6,6,P.plate);
+  // mouth grid
+  px(28,37,8,2,P.skin2); px(29,37,1,2,P.bg); px(31,37,1,2,P.bg); px(33,37,1,2,P.bg);
+  // neck / circuitry
+  px(28,42,8,6,P.skin2); px(26,44,2,2,P.eye); px(36,44,2,2,P.eye);
+  px(22,48,20,8,P.plate); px(24,50,3,3,P.eye); px(37,50,3,3,P.eye); px(30,50,4,3,P.skin);
+  const tex=new THREE.CanvasTexture(cv); tex.magFilter=THREE.NearestFilter; tex.minFilter=THREE.NearestFilter;
+  return tex;
+}
+
+// --- UP: sky with constellations (Vedic-inspired) ---
+const upGroup=new THREE.Group(); scene.add(upGroup); upGroup.visible=false;
+(function buildSky(){
+  const R=rng(7777);
+  // field of stars on a large sphere
+  const starGeo=new THREE.BufferGeometry(); const pos=[]; const N=520;
+  for(let i=0;i<N;i++){
+    const u=R(), v=R(); const th=Math.acos(2*v-1), ph=2*Math.PI*u;
+    const r=8.0;
+    const y=Math.abs(Math.cos(th))*r + 1.0; // bias upward
+    pos.push(Math.sin(th)*Math.cos(ph)*r, y, Math.sin(th)*Math.sin(ph)*r - 2.0);
+  }
+  starGeo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  const stars=new THREE.Points(starGeo,new THREE.PointsMaterial({color:hx(CONFIG.look.upTint),size:0.06,transparent:true,opacity:0.9, sizeAttenuation:true}));
+  upGroup.add(stars);
+  // a few named constellation polylines (nakshatra-ish abstract figures)
+  const consts=[
+    [[-2,4,-4],[-1.4,4.6,-4],[-0.6,4.3,-4.2],[0.1,4.9,-4],[0.8,4.4,-4.3]],
+    [[2,5,-5],[2.6,5.5,-5],[3.1,5.0,-5.2],[2.8,4.4,-5],[2.2,4.6,-5.1]],
+    [[-3,5.5,-3],[-2.4,5.9,-3.2],[-1.9,5.4,-3.5],[-2.5,5.0,-3.3]],
+    [[0.5,6.2,-2],[1.1,6.6,-2.2],[1.7,6.1,-2.4],[1.3,5.6,-2.1],[0.5,6.2,-2]]
+  ];
+  consts.forEach(c=>{
+    const v=c.map(p=>new THREE.Vector3(p[0],p[1],p[2]));
+    upGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(v),
+      new THREE.LineBasicMaterial({color:hx(CONFIG.look.upTint),transparent:true,opacity:0.7})));
+    v.forEach(p=>{ const s=new THREE.Mesh(new THREE.SphereGeometry(0.04,6,6),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.9})); s.position.copy(p); upGroup.add(s); });
+  });
+})();
+
+// --- DOWN: earth ripple roots radiating from beneath the phone ---
+const downGroup=new THREE.Group(); scene.add(downGroup); downGroup.visible=false;
+const earthPlane=(function(){
+  const seg=60, size=8;
+  const geo=new THREE.PlaneGeometry(size,size,seg,seg);
+  geo.rotateX(-Math.PI/2);
+  const mat=new THREE.MeshBasicMaterial({color:hx(CONFIG.look.downTint),wireframe:true,transparent:true,opacity:0.6});
+  const m=new THREE.Mesh(geo,mat);
+  m.position.set(0,-1.0,0); // ~3ft below the held phone
+  downGroup.add(m); return m;
+})();
+// root lines radiating
+const roots=new THREE.Group();
+(function(){ const R=rng(1234); const N=26;
+  for(let i=0;i<N;i++){
+    const a=i/N*Math.PI*2 + R()*0.2; const pts=[new THREE.Vector3(0,0,0)];
+    let cur=new THREE.Vector3(0,0,0), dir=new THREE.Vector3(Math.cos(a),0,Math.sin(a));
+    const steps=8+Math.floor(R()*6);
+    for(let s=0;s<steps;s++){ dir.x+=(R()-0.5)*0.4; dir.z+=(R()-0.5)*0.4; dir.normalize();
+      cur=cur.clone().add(dir.clone().multiplyScalar(0.25+R()*0.2)); cur.y=Math.sin(s*0.6)*0.03; pts.push(cur.clone()); }
+    roots.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+      new THREE.LineBasicMaterial({color:hx(CONFIG.look.downTint),transparent:true,opacity:0.7})));
+  }
+})();
+roots.position.set(0,-0.99,0); downGroup.add(roots);
+
+/* ===================================================================
+   3D TEXT SYSTEM  (canvas-textured planes, fixed orientation = readable
+   straight-on, angled from the sides; surreal line-by-line reveal)
+   =================================================================== */
+const textGroup=new THREE.Group(); scene.add(textGroup);
+let activeLines=[];     // {mesh, mat, born, targetY}
+function clearText(){
+  activeLines.forEach(l=>{
+    if(!l.mesh) return;               // empty-line spacers have no mesh
+    textGroup.remove(l.mesh); l.mesh.geometry.dispose();
+    if(l.mat){ if(l.mat.map) l.mat.map.dispose(); l.mat.dispose(); }
+  });
+  activeLines=[];
+}
+function makeLineMesh(str){
+  const fontPx=64; const pad=24;
+  const cv=document.createElement('canvas'); const ctx=cv.getContext('2d');
+  const font=`400 ${fontPx}px 'Space Grotesk', system-ui, sans-serif`;
+  ctx.font=font; const w=Math.max(8, ctx.measureText(str).width);
+  cv.width=Math.ceil(w+pad*2); cv.height=fontPx+pad*2;
+  const c=cv.getContext('2d'); c.font=font;
+  c.textBaseline='middle'; c.textAlign='center';
+  c.shadowColor='rgba(0,0,0,0.55)'; c.shadowBlur=10;
+  c.fillStyle=CONFIG.look.textColor;
+  c.fillText(str, cv.width/2, cv.height/2);
+  const tex=new THREE.CanvasTexture(cv); tex.minFilter=THREE.LinearFilter;
+  const mat=new THREE.MeshBasicMaterial({map:tex,transparent:true,opacity:0,depthTest:false,depthWrite:false,side:THREE.DoubleSide});
+  const scale=0.0016*CONFIG.look.textSize;
+  const mesh=new THREE.Mesh(new THREE.PlaneGeometry(cv.width*scale, cv.height*scale), mat);
+  mesh.renderOrder=10;
+  return {mesh,mat,w:cv.width*scale,h:cv.height*scale};
+}
+
+// place text in front of a given world anchor & direction
+let textAnchor=new THREE.Vector3(0,0.25,-2.2);
+let textForward=new THREE.Vector3(0,0,-1);
+function layoutTextStack(lines, anchor, lookFrom){
+  clearText();
+  const startY=anchor.y + (lines.length-1)*0.085*0.5 + 0.18;
+  lines.forEach((str,i)=>{
+    if(str.trim()===''){ activeLines.push({empty:true, born:i}); return; }
+    const lm=makeLineMesh(str);
+    lm.mesh.position.copy(anchor);
+    lm.mesh.position.y = startY - i*0.115*CONFIG.look.textSize;
+    // orient to face the canonical front (so straight-on reads flat, sides read angled)
+    lm.mesh.lookAt(lookFrom);
+    textGroup.add(lm.mesh);
+    activeLines.push({mesh:lm.mesh, mat:lm.mat, born:null, index:i, str});
+  });
+}
+
+/* ===================================================================
+   NARRATION ENGINE  (reveals a script line-by-line, surreal fade-up)
+   =================================================================== */
+const Narr = {
+  queue:[], idx:0, lineStart:0, playing:false, key:null,
+  onDone:null,
+  start(lines, anchor, lookFrom, key, onDone){
+    this.key=key; this.queue=lines.slice(); this.idx=0; this.playing=true; this.onDone=onDone||null;
+    layoutTextStack(lines, anchor, lookFrom);
+    this.lineStart=performance.now();
+  },
+  stop(){ this.playing=false; this.queue=[]; },
+  update(now){
+    if(!this.playing) return;
+    const delay = CONFIG.look.lineDelay*1000 / Math.max(0.2,CONFIG.look.textSpeed);
+    const elapsed=now-this.lineStart;
+    const reveal = Math.floor(elapsed/delay)+1;
+    // fade each revealed line in
+    activeLines.forEach((l)=>{
+      if(l.empty) return;
+      if(l.index < reveal){
+        const age=(elapsed - (l.index)*delay)/delay; // 0..1 over one slot
+        l.mat.opacity = clamp(lerp(l.mat.opacity, 0.96, 0.06),0,1);
+        // gentle surreal drift settle
+        l.mesh.position.y += Math.sin(now*0.0008 + l.index)*0.00006;
+      }
+    });
+    if(reveal > this.queue.length + 1){
+      this.playing=false;
+      if(this.onDone) this.onDone();
+    }
+  }
+};
+
+/* ===================================================================
+   AUDIO — generative ambient engine (Web Audio)
+   =================================================================== */
+const Audio = {
+  ctx:null, master:null, drone:[], filter:null, started:false, lfo:null,
+  init(){
+    if(this.started) return;
+    const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+    this.ctx=new AC();
+    this.master=this.ctx.createGain(); this.master.gain.value=0.0; this.master.connect(this.ctx.destination);
+    this.filter=this.ctx.createBiquadFilter(); this.filter.type='lowpass'; this.filter.frequency.value=700; this.filter.Q.value=2;
+    this.filter.connect(this.master);
+    const base=CONFIG.audio.droneFreq;
+    [1, 1.5, 2.01, 0.5].forEach((mult,i)=>{
+      const o=this.ctx.createOscillator(); o.type=i%2?'triangle':'sine'; o.frequency.value=base*mult;
+      const g=this.ctx.createGain(); g.gain.value=(i===0?0.3:0.12);
+      o.connect(g); g.connect(this.filter); o.start();
+      this.drone.push({o,g,mult});
+    });
+    // slow shimmer LFO on filter
+    this.lfo=this.ctx.createOscillator(); this.lfo.frequency.value=0.06;
+    const lg=this.ctx.createGain(); lg.gain.value=400; this.lfo.connect(lg); lg.connect(this.filter.frequency); this.lfo.start();
+    this.started=true;
+    this.setMaster(CONFIG.audio.master);
+  },
+  resume(){ if(this.ctx && this.ctx.state==='suspended') this.ctx.resume(); },
+  setMaster(v){ if(this.master) this.master.gain.setTargetAtTime(CONFIG.audio.droneOn? v*0.0 :0, this.ctx.currentTime, 0.1); /*ramp on play()*/ },
+  play(){ if(this.master) this.master.gain.setTargetAtTime(CONFIG.audio.droneOn?CONFIG.audio.master:0, this.ctx.currentTime, 1.5); },
+  // looking up -> spiral pitch & open filter
+  setSpiral(amt){ if(!this.started)return; this.filter.frequency.setTargetAtTime(700+amt*1600, this.ctx.currentTime,0.3);
+    this.drone.forEach(d=> d.o.frequency.setTargetAtTime(CONFIG.audio.droneFreq*d.mult*(1+amt*0.12), this.ctx.currentTime,0.4)); },
+  pluck(){ if(!this.started||!CONFIG.audio.droneOn)return; const t=this.ctx.currentTime;
+    const o=this.ctx.createOscillator(); o.type='triangle';
+    o.frequency.value=CONFIG.audio.droneFreq*(2+Math.floor(Math.random()*4)*0.5);
+    const g=this.ctx.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.18*CONFIG.audio.master,t+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t+0.5);
+    o.connect(g); g.connect(this.master); o.start(t); o.stop(t+0.55);
+  }
+};
+let lastPluck=0;
+
+/* ===================================================================
+   ORIENTATION  (device gyroscope, with desktop mouse fallback)
+   =================================================================== */
+const Orient = {
+  have:false, alpha:0,beta:0,gamma:0, screenAngle:0,
+  curQuat:new THREE.Quaternion(), refQuat:new THREE.Quaternion(), refSet:false,
+  // desktop fallback
+  mouseYaw:0, mousePitch:0, dragging:false, lastX:0,lastY:0,
+  init(){
+    window.addEventListener('orientationchange', ()=>{ this.screenAngle=(screen.orientation&&screen.orientation.angle)||window.orientation||0; });
+    this.screenAngle=(screen.orientation&&screen.orientation.angle)||window.orientation||0;
+    window.addEventListener('deviceorientation', e=>{
+      if(e.alpha===null) return;
+      this.have=true; this.alpha=e.alpha; this.beta=e.beta; this.gamma=e.gamma;
+    }, true);
+    // desktop drag fallback
+    canvas.addEventListener('pointerdown', e=>{ if(this.have) return; this.dragging=true; this.lastX=e.clientX; this.lastY=e.clientY; });
+    window.addEventListener('pointermove', e=>{ if(!this.dragging||this.have) return;
+      this.mouseYaw   -= (e.clientX-this.lastX)*0.005; this.mousePitch += (e.clientY-this.lastY)*0.005;
+      this.mousePitch=clamp(this.mousePitch,-1.2,1.2); this.lastX=e.clientX; this.lastY=e.clientY; });
+    window.addEventListener('pointerup', ()=>{ this.dragging=false; });
+  },
+  setRef(){ this.refQuat.copy(this.curQuat); this.refSet=true; },
+  quatFromDevice(q){
+    const deg=Math.PI/180;
+    const a=this.alpha*deg, b=this.beta*deg, g=this.gamma*deg, o=this.screenAngle*deg;
+    const euler=new THREE.Euler(b,a,-g,'YXZ');
+    q.setFromEuler(euler);
+    q.multiply(new THREE.Quaternion(-Math.sqrt(0.5),0,0,Math.sqrt(0.5))); // -PI/2 around X
+    q.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), -o));
+    return q;
+  },
+  update(){
+    if(this.have){ this.quatFromDevice(this.curQuat); }
+    else {
+      const e=new THREE.Euler(this.mousePitch, this.mouseYaw, 0,'YXZ');
+      this.curQuat.setFromEuler(e);
+    }
+    if(!this.refSet) return {yaw:0,pitch:0};
+    const rel=this.refQuat.clone().invert().multiply(this.curQuat);
+    const e=new THREE.Euler().setFromQuaternion(rel,'YXZ');
+    return {yaw:e.y, pitch:e.x};
+  }
+};
+
+/* ===================================================================
+   STATE MACHINE
+   =================================================================== */
+const State = { phase:'idle', // idle -> intro -> guide -> ar
+  introDone:false, current:'forward', tintCol:new THREE.Color(), gray:0, waves:0 };
+
+let camReady=false;
+
+async function startCamera(){
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ideal:'environment'}, width:{ideal:1280}, height:{ideal:720} }, audio:false });
+    camVideo.srcObject=stream; await camVideo.play();
+    camReady=true; ditherUniforms.uHasCam.value=1.0;
+    const settings=stream.getVideoTracks()[0].getSettings();
+    ditherUniforms.uTexRes.value.set(settings.width||1280, settings.height||720);
+  }catch(err){ camReady=false; ditherUniforms.uHasCam.value=0.0; console.warn('camera unavailable',err); }
+}
+
+async function tryFrontCamera(){
+  if(!CONFIG.look.mirrorFrontCam) return;
+  if(selfTex) return;
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'user' }, audio:false });
+    selfVideo.srcObject=stream; await selfVideo.play();
+    selfTex=new THREE.VideoTexture(selfVideo);
+    mirrorMat.map=selfTex; mirrorMat.needsUpdate=true;
+  }catch(e){ /* keep avatar */ }
+}
+
+async function requestMotion(){
+  try{
+    if(typeof DeviceOrientationEvent!=='undefined' && typeof DeviceOrientationEvent.requestPermission==='function'){
+      const r=await DeviceOrientationEvent.requestPermission(); // iOS
+    }
+  }catch(e){}
+}
+
+async function enter(){
+  document.getElementById('start').style.display='none';
+  Audio.init(); Audio.resume();
+  await requestMotion();
+  await startCamera();
+  // set reference orientation after a moment so user has settled forward
+  setTimeout(()=>Orient.setRef(), 400);
+  beginIntro();
+}
+
+function beginIntro(){
+  State.phase='intro';
+  document.getElementById('skipBtn').classList.add('show');
+  // intro: focus forward, gray the edges
+  textAnchor.set(0,0.30,-2.05);
+  Narr.start([...CONFIG.texts.intro], textAnchor, camera.position.clone().add(new THREE.Vector3(0,0.30,0.1)), 'intro', ()=>{
+    // after intro, brief guide then enter AR
+    Narr.start([...CONFIG.texts.guide], textAnchor, camera.position.clone().add(new THREE.Vector3(0,0.30,0.1)), 'guide', ()=>{
+      beginAR();
+    });
+  });
+}
+document.getElementById('skipBtn').onclick=()=>{ Narr.stop(); clearText(); beginAR(); };
+
+function beginAR(){
+  State.phase='ar'; State.introDone=true;
+  document.getElementById('skipBtn').classList.remove('show');
+  Orient.setRef(); // recalibrate forward
+  Audio.play();
+  document.getElementById('aboutBtn').classList.add('show');
+  document.getElementById('menuTab').classList.add('show');
+  showHint('forward · the guardian glass');
+  State.current=null; // force first narration
+}
+
+/* ---- hint ---- */
+let hintTimer=null;
+function showHint(t){
+  if(!CONFIG.look.showHints) return;
+  const h=document.getElementById('hint'); h.textContent=t; h.classList.add('show');
+  clearTimeout(hintTimer); hintTimer=setTimeout(()=>h.classList.remove('show'), 3200);
+}
+
+/* ===================================================================
+   DIRECTIONAL NARRATION SWITCH (AR phase)
+   =================================================================== */
+const DIRS={
+  forward:{ key:'forward', tint:'forwardTint', anchorY:0.30, z:-2.05, hint:'the guardian glass' },
+  left:   { key:'left',    tint:'leftTint',    anchorY:0.10, z:-1.9,  hint:'left · the back, the future, the cycle' },
+  right:  { key:'right',   tint:'rightTint',   anchorY:0.10, z:-1.9,  hint:'right · a mirror of multiples' },
+  up:     { key:'up',      tint:'upTint',      anchorY:0.55, z:-2.4,  hint:'above · the expansive sky' },
+  down:   { key:'down',    tint:'downTint',    anchorY:-0.4, z:-1.6,  hint:'below · the fertile earth' }
+};
+function pickDirection(yaw,pitch){
+  const TH=0.5; // ~28deg
+  if(pitch> TH*0.9) return 'up';
+  if(pitch< -TH*0.9) return 'down';
+  if(yaw>  TH) return 'left';   // turning head left = +yaw in this convention
+  if(yaw< -TH) return 'right';
+  return 'forward';
+}
+function enterDirection(dir){
+  if(State.current===dir) return;
+  State.current=dir;
+  const d=DIRS[dir];
+  // position the dream object's halo-relative narration anchor in that direction
+  const fwd=new THREE.Vector3(0,0,-1).applyQuaternion(Orient.refQuat);
+  const up=new THREE.Vector3(0,1,0);
+  const right=new THREE.Vector3().crossVectors(fwd,up).normalize();
+  let anchor=new THREE.Vector3(0, d.anchorY, 0).addScaledVector(fwd, -d.z);
+  let lookFrom=camera.position.clone();
+  if(dir==='left')  anchor.addScaledVector(right,-1.0);
+  if(dir==='right') anchor.addScaledVector(right, 1.0);
+  if(dir==='up')    anchor.y+=0.4;
+  if(dir==='down')  anchor.y-=0.5;
+  Narr.start([...CONFIG.texts[dir]], anchor, lookFrom, dir);
+  showHint(d.hint);
+  if(dir==='left'){ Audio.pluck(); }
+}
+
+/* ===================================================================
+   MAIN LOOP
+   =================================================================== */
+const dirWeights={forward:1,left:0,right:0,up:0,down:0};
+function updateWeights(yaw,pitch){
+  const aw=smooth(0.15,0.7, yaw), bw=smooth(0.15,0.7,-yaw);
+  const uw=smooth(0.15,0.7,pitch), dw=smooth(0.15,0.7,-pitch);
+  dirWeights.left=aw; dirWeights.right=bw; dirWeights.up=uw; dirWeights.down=dw;
+  dirWeights.forward=clamp(1-(aw+bw+uw+dw),0,1);
+}
+
+const tmpV=new THREE.Vector3();
+const projCenter=new THREE.Vector3();
+const projEdge=new THREE.Vector3();
+
+function updateHalo(){
+  // project sculpture centre + an offset at haloRadius to screen, derive screen radius
+  SCULPT.getWorldPosition(tmpV);
+  projCenter.copy(tmpV).project(camera);
+  // edge point: centre + cameraRight * haloRadius
+  const right=new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion);
+  projEdge.copy(tmpV).addScaledVector(right, CONFIG.look.haloRadius).project(camera);
+  const cx=(projCenter.x*0.5+0.5), cy=(projCenter.y*0.5+0.5);
+  const ex=(projEdge.x*0.5+0.5), ey=(projEdge.y*0.5+0.5);
+  const aspect=W()/H();
+  let r=Math.hypot((ex-cx)*aspect,(ey-cy));
+  if(projCenter.z>1) r=0.0; // behind camera -> no halo
+  ditherUniforms.uHaloCenter.value.set(cx,cy);
+  ditherUniforms.uHaloR.value=clamp(r,0.02,1.5);
+}
+
+const clock=new THREE.Clock();
+function loop(){
+  requestAnimationFrame(loop);
+  const dt=clock.getDelta(); const now=performance.now();
+  ditherUniforms.uTime.value=now*0.001;
+
+  let {yaw,pitch}=Orient.update();
+  // axis sign can differ per device — allow flipping L/R and U/D
+  if(CONFIG.look.invertLR) yaw  = -yaw;
+  if(CONFIG.look.invertUD) pitch= -pitch;
+  // drive camera by absolute device orientation
+  camera.quaternion.copy(Orient.curQuat);
+
+  // place sculpture along ref-forward (so forward == toward the object)
+  if(Orient.refSet){
+    const fwd=new THREE.Vector3(0,0,-1).applyQuaternion(Orient.refQuat);
+    SCULPT.position.copy(camera.position).addScaledVector(fwd, 2.2);
+    SCULPT.lookAt(camera.position.x, SCULPT.position.y, camera.position.z);
+  } else {
+    SCULPT.position.set(0,0,-2.2);
+  }
+
+  // gears + hands + crank animate
+  const gs=CONFIG.look.gearSpeed;
+  gearMeshes.forEach(g=> g.rotation.z += g.userData.speed*dt*gs);
+  if(handcrank) handcrank.rotation.x += dt*0.6*gs;
+  clockHands.forEach((h,i)=> h.rotation.z -= dt*(0.2+i*0.15)*gs);
+
+  // gyroscope dream visuals animate
+  gyro.children.forEach((r,i)=> r.rotation[['z','x','y'][i%3]] += dt*(0.6+i*0.2));
+  if(earthPlane){ const pos=earthPlane.geometry.attributes.position;
+    for(let i=0;i<pos.count;i++){ const x=pos.getX(i), z=pos.getZ(i); pos.setY(i, Math.sin((Math.hypot(x,z))*2.0 - now*0.002)*0.08); }
+    pos.needsUpdate=true; }
+  if(upGroup.visible){ upGroup.rotation.y += dt*0.02; }
+
+  // ---- phase logic ----
+  if(State.phase==='ar'){
+    updateWeights(yaw,pitch);
+    const dir=pickDirection(yaw,pitch);
+    enterDirection(dir);
+
+    // blend tint colour from weights
+    const c=new THREE.Color(0,0,0); let tot=0;
+    for(const k in dirWeights){ const w=dirWeights[k]; if(w<=0)continue;
+      c.add(hx(CONFIG.look[DIRS[k].tint]).multiplyScalar(w)); tot+=w; }
+    if(tot>0) c.multiplyScalar(1/tot);
+    ditherUniforms.uTint.value.lerp(c, 0.06);
+    const tgtTint = clamp((dirWeights.left+dirWeights.right+dirWeights.up+dirWeights.down)*CONFIG.look.tintStrength, 0, CONFIG.look.tintStrength);
+    ditherUniforms.uTintAmt.value = lerp(ditherUniforms.uTintAmt.value, tgtTint, 0.06);
+
+    // forward focus deepens the dither/gray of the surroundings
+    ditherUniforms.uGray.value = lerp(ditherUniforms.uGray.value, dirWeights.forward*0.45, 0.05);
+
+    // visibility / opacity of dream groups
+    setGroupOpacity(leftGroup, dirWeights.left);
+    setGroupOpacity(rightGroup, dirWeights.right);
+    setGroupOpacity(upGroup, dirWeights.up);
+    setGroupOpacity(downGroup, dirWeights.down);
+    ditherUniforms.uWaves.value = lerp(ditherUniforms.uWaves.value, dirWeights.left, 0.05);
+    ditherUniforms.uWaveCol.value.copy(hx(CONFIG.look.leftTint));
+
+    // thread unfolds while looking left
+    const reveal=Math.floor(lerp(40, TN, dirWeights.left));
+    thread.geometry.setDrawRange(0, reveal);
+
+    // right -> try front camera lazily
+    if(dirWeights.right>0.4) tryFrontCamera();
+
+    // audio reactions
+    Audio.setSpiral(dirWeights.up);
+    if(dirWeights.left>0.6 && now-lastPluck>1100){ Audio.pluck(); lastPluck=now; }
+
+  } else if(State.phase==='intro'){
+    // intro: hold forward, grey the world
+    ditherUniforms.uGray.value=lerp(ditherUniforms.uGray.value,0.55,0.02);
+    ditherUniforms.uTintAmt.value=lerp(ditherUniforms.uTintAmt.value,0,0.05);
+  }
+
+  Narr.update(now);
+
+  // sculpture face textures always face camera-ish? keep flat. fade sculpture in over intro
+  SCULPT.traverse(o=>{ if(o.material&&o.material.transparent && o.userData.henna){ /* henna opacity stable */ } });
+
+  // ---- render ----
+  ditherUniforms.uRes.value.set(W(),H());
+  ditherUniforms.uPixel.value=CONFIG.look.pixelSize;
+  ditherUniforms.uDither.value=CONFIG.look.ditherAmount;
+  ditherUniforms.uDesat.value=CONFIG.look.desaturation;
+  ditherUniforms.uSoft.value=CONFIG.look.haloSoftness;
+  ditherUniforms.uVignette.value=CONFIG.look.vignette;
+
+  updateHalo();
+
+  renderer.clear();
+  renderer.render(bgScene,bgCam);     // camera + dither background
+  renderer.clearDepth();
+  renderer.render(scene,camera);      // AR world on top
+}
+function setGroupOpacity(group,w){
+  group.visible = w>0.02;
+  group.traverse(o=>{ if(o.material && 'opacity' in o.material){
+    if(o.userData._baseOp===undefined) o.userData._baseOp=o.material.opacity;
+    o.material.opacity = o.userData._baseOp * clamp(w,0,1);
+  }});
+}
+loop();
+
+/* ===================================================================
+   RESIZE
+   =================================================================== */
+function onResize(){ renderer.setSize(W(),H()); camera.aspect=W()/H(); camera.updateProjectionMatrix(); ditherUniforms.uRes.value.set(W(),H()); }
+window.addEventListener('resize', onResize);
+
+/* ===================================================================
+   ABOUT
+   =================================================================== */
+function refreshAbout(){ document.getElementById('aboutText').textContent=CONFIG.texts.about; }
+refreshAbout();
+document.getElementById('aboutBtn').onclick=()=>{ refreshAbout(); document.getElementById('aboutPanel').classList.add('open'); };
+document.getElementById('aboutClose').onclick=()=>document.getElementById('aboutPanel').classList.remove('open');
+
+/* ===================================================================
+   MENU  (build controls, bind, persist)
+   =================================================================== */
+const enterBtn=document.getElementById('enterBtn');
+enterBtn.onclick=enter;
+
+const menu=document.getElementById('menu');
+function toggleMenu(force){ const open = force!==undefined?force: !menu.classList.contains('open'); menu.classList.toggle('open',open); }
+document.getElementById('menuClose').onclick=()=>toggleMenu(false);
+document.getElementById('menuTab').onclick=()=>toggleMenu();
+window.addEventListener('keydown',e=>{ if(e.key==='m'||e.key==='M'){ toggleMenu(); } if(e.key==='Escape'){ toggleMenu(false); document.getElementById('aboutPanel').classList.remove('open'); } });
+
+// tabs
+document.querySelectorAll('.tab').forEach(t=> t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tabpane').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active'); document.getElementById('pane-'+t.dataset.tab).classList.add('active');
+});
+
+function slider(parent,label,objKey,key,min,max,step,fmt){
+  const v=()=>CONFIG[objKey][key];
+  const row=document.createElement('div'); row.className='row';
+  row.innerHTML=`<label>${label}</label>`;
+  const input=document.createElement('input'); input.type='range'; input.min=min; input.max=max; input.step=step; input.value=v();
+  const val=document.createElement('span'); val.className='val'; val.textContent=fmt?fmt(v()):v();
+  input.oninput=()=>{ CONFIG[objKey][key]=parseFloat(input.value); val.textContent=fmt?fmt(CONFIG[objKey][key]):CONFIG[objKey][key]; onLiveChange(objKey,key); };
+  row.appendChild(input); row.appendChild(val); parent.appendChild(row);
+}
+function color(parent,label,key){
+  const row=document.createElement('div'); row.className='row';
+  row.innerHTML=`<label>${label}</label>`;
+  const input=document.createElement('input'); input.type='color'; input.value=CONFIG.look[key];
+  input.oninput=()=>{ CONFIG.look[key]=input.value; onLiveChange('look',key); };
+  row.appendChild(input); parent.appendChild(row);
+}
+function toggle(parent,label,objKey,key){
+  const row=document.createElement('div'); row.className='row';
+  row.innerHTML=`<label>${label}</label>`;
+  const sw=document.createElement('div'); sw.className='switch'+(CONFIG[objKey][key]?' on':'');
+  sw.innerHTML='<div class="k"></div>';
+  sw.onclick=()=>{ CONFIG[objKey][key]=!CONFIG[objKey][key]; sw.classList.toggle('on',CONFIG[objKey][key]); onLiveChange(objKey,key); };
+  row.appendChild(sw); parent.appendChild(row);
+}
+function group(parent,title){ const g=document.createElement('div'); g.className='grp'; g.innerHTML=`<h4>${title}</h4>`; parent.appendChild(g); return g; }
+
+function buildMenu(){
+  const look=document.getElementById('pane-look'); look.innerHTML='';
+  let g=group(look,'Dither & camera');
+  slider(g,'Dither amount','look','ditherAmount',0,1,0.01,v=>v.toFixed(2));
+  slider(g,'Pixel size','look','pixelSize',1,16,0.5,v=>v.toFixed(1));
+  slider(g,'Desaturation','look','desaturation',0,1,0.01,v=>v.toFixed(2));
+  slider(g,'Vignette','look','vignette',0,1,0.01,v=>v.toFixed(2));
+
+  g=group(look,'The halo (clear zone)');
+  slider(g,'Halo radius (m)','look','haloRadius',0.3,2.0,0.05,v=>v.toFixed(2));
+  slider(g,'Halo softness','look','haloSoftness',0.05,1.2,0.05,v=>v.toFixed(2));
+
+  g=group(look,'Colour & tint');
+  slider(g,'Tint strength','look','tintStrength',0,1,0.01,v=>v.toFixed(2));
+  color(g,'Base tint','baseTint');
+  color(g,'Forward tint','forwardTint');
+  color(g,'Left (green)','leftTint');
+  color(g,'Right (magenta)','rightTint');
+  color(g,'Up (sky)','upTint');
+  color(g,'Down (earth)','downTint');
+
+  g=group(look,'The object');
+  color(g,'Wireframe','wireColor');
+  color(g,'Henna','hennaColor');
+  color(g,'Accent','accentColor');
+  slider(g,'Gear speed','look','gearSpeed',0,3,0.05,v=>v.toFixed(2));
+
+  g=group(look,'Text');
+  color(g,'Text colour','textColor');
+  slider(g,'Text size','look','textSize',0.5,2.0,0.05,v=>v.toFixed(2));
+  slider(g,'Text speed','look','textSpeed',0.3,3,0.05,v=>v.toFixed(2));
+  slider(g,'Line delay (s)','look','lineDelay',0.8,6,0.1,v=>v.toFixed(1));
+
+  g=group(look,'Interface');
+  toggle(g,'Show hints','look','showHints');
+  toggle(g,'Use front camera in mirror','look','mirrorFrontCam');
+  toggle(g,'Invert left / right','look','invertLR');
+  toggle(g,'Invert up / down','look','invertUD');
+
+  // audio pane
+  const au=document.getElementById('pane-audio'); au.innerHTML='';
+  let ag=group(au,'Ambient engine');
+  toggle(ag,'Drone on','audio','droneOn');
+  slider(ag,'Master volume','audio','master',0,1,0.01,v=>v.toFixed(2));
+  slider(ag,'Drone pitch (Hz)','audio','droneFreq',55,330,1,v=>Math.round(v));
+  slider(ag,'Shimmer','audio','shimmer',0,1,0.01,v=>v.toFixed(2));
+
+  // text pane
+  const tx=document.getElementById('pane-text'); tx.innerHTML='';
+  const labels={intro:'Intro narration',guide:'Guide bridge',forward:'Forward — the guardian',left:'Left — the back & cycles',right:'Right — the mirror',up:'Up — the sky',down:'Down — the earth'};
+  Object.keys(labels).forEach(k=>{
+    const b=document.createElement('div'); b.className='txtblock';
+    b.innerHTML=`<label>${labels[k]}</label>`;
+    const ta=document.createElement('textarea'); ta.value=CONFIG.texts[k].join('\n');
+    ta.oninput=()=>{ CONFIG.texts[k]=ta.value.split('\n'); saveLocal(); };
+    b.appendChild(ta); tx.appendChild(b);
+  });
+  // about text
+  const ab=document.createElement('div'); ab.className='txtblock';
+  ab.innerHTML=`<label>About panel text</label>`;
+  const ata=document.createElement('textarea'); ata.style.minHeight='140px'; ata.value=CONFIG.texts.about;
+  ata.oninput=()=>{ CONFIG.texts.about=ata.value; saveLocal(); refreshAbout(); };
+  ab.appendChild(ata); tx.appendChild(ab);
+}
+buildMenu();
+
+function onLiveChange(objKey,key){
+  saveLocal();
+  // immediate effects
+  if(objKey==='audio'){
+    if(key==='master'||key==='droneOn'){ if(Audio.started){ Audio.master.gain.setTargetAtTime(CONFIG.audio.droneOn?CONFIG.audio.master:0, Audio.ctx.currentTime,0.2); } }
+    if(key==='droneFreq' && Audio.started){ Audio.drone.forEach(d=> d.o.frequency.setTargetAtTime(CONFIG.audio.droneFreq*d.mult, Audio.ctx.currentTime,0.2)); }
+  }
+  if(objKey==='look'){
+    if(['wireColor','hennaColor','accentColor'].includes(key)){ rebuildObject(); }
+    if(key==='leftTint'){ recolorGroup(leftGroup, CONFIG.look.leftTint); }
+    if(key==='rightTint'){ recolorGroup(rightGroup, CONFIG.look.rightTint); }
+    if(key==='upTint'){ recolorGroup(upGroup, CONFIG.look.upTint); }
+    if(key==='downTint'){ recolorGroup(downGroup, CONFIG.look.downTint); }
+  }
+}
+function rebuildObject(){ buildSculpture(); }
+function recolorGroup(group,hexv){ group.traverse(o=>{ if(o.material&&o.material.color){ o.material.color.set(hexv); } }); }
+
+/* ---- reset ---- */
+document.getElementById('resetBtn').onclick=()=>{
+  if(!confirm('Reset all appearance, audio and text to defaults?')) return;
+  const fresh=JSON.parse(JSON.stringify(DEFAULTS));
+  Object.assign(CONFIG.look,fresh.look); Object.assign(CONFIG.audio,fresh.audio);
+  CONFIG.texts=JSON.parse(JSON.stringify(DEFAULT_TEXTS));
+  saveLocal(); buildMenu(); rebuildObject(); refreshAbout();
+  toast('Reset to defaults');
+};
+
+/* ---- export: bake settings into a downloadable copy of this HTML ---- */
+document.getElementById('exportBtn').onclick=()=>{
+  saveLocal();
+  // snapshot live UI state so the exported file opens on a clean start screen
+  const startEl=document.getElementById('start');
+  const prevStart=startEl.style.display;
+  const menuOpen=menu.classList.contains('open');
+  const aboutOpen=document.getElementById('aboutPanel').classList.contains('open');
+  startEl.style.display='flex';
+  menu.classList.remove('open');
+  document.getElementById('aboutPanel').classList.remove('open');
+
+  let html='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+  const cfg=JSON.stringify(CONFIG);
+  const block='/*__CONFIG_START__*/\nwindow.EMBEDDED_CONFIG = '+cfg+';\n/*__CONFIG_END__*/';
+  html=html.replace(/\/\*__CONFIG_START__\*\/[\s\S]*?\/\*__CONFIG_END__\*\//, block.replace(/\$/g,'$$$$'));
+
+  // restore live state
+  startEl.style.display=prevStart;
+  if(menuOpen) menu.classList.add('open');
+  if(aboutOpen) document.getElementById('aboutPanel').classList.add('open');
+
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='ajeebland.html'; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+  toast('Saved ajeebland.html with your settings');
+};
+
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+
+/* ---- init orientation listeners ---- */
+Orient.init();
+
+/* ---- if opened on desktop without a tap, still allow preview via Enter key ---- */
+window.addEventListener('keydown',e=>{ if(e.key==='Enter' && State.phase==='idle'){ enter(); } });
+</script>
+</body>
+</html>
