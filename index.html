@@ -1,14 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="mobile-web-app-capable" content="yes" />
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Ajeebland — a portal dreamt by Ajeebsir</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&amp;family=Inter:wght@300;400;600&amp;display=swap" rel="stylesheet">
 <style>
   :root{
     --ink:#0c0b09;
@@ -168,20 +167,20 @@
 </style>
 </head>
 <body>
-  <video id="cam" playsinline autoplay muted></video>
-  <video id="selfcam" playsinline autoplay muted></video>
-  <canvas id="scene" class="layer"></canvas>
+  <video id="cam" playsinline="" autoplay="" muted=""></video>
+  <video id="selfcam" playsinline="" autoplay="" muted=""></video>
+  <canvas id="scene" class="layer" width="804" height="1348" style="width: 402px; height: 674px;"></canvas>
 
   <!-- Start / permissions -->
-  <div id="start">
+  <div id="start" style="display: flex;">
     <div class="glyph">
       <svg width="86" height="86" viewBox="0 0 100 100" fill="none" stroke="#d9a441" stroke-width="1.1">
-        <circle cx="50" cy="50" r="34"/><circle cx="50" cy="50" r="22"/><circle cx="50" cy="50" r="9"/>
+        <circle cx="50" cy="50" r="34"></circle><circle cx="50" cy="50" r="22"></circle><circle cx="50" cy="50" r="9"></circle>
         <g stroke-width=".8">
-          <path d="M50 16 L50 28 M50 72 L50 84 M16 50 L28 50 M72 50 L84 50"/>
-          <path d="M26 26 L34 34 M66 66 L74 74 M74 26 L66 34 M34 66 L26 74"/>
+          <path d="M50 16 L50 28 M50 72 L50 84 M16 50 L28 50 M72 50 L84 50"></path>
+          <path d="M26 26 L34 34 M66 66 L74 74 M74 26 L66 34 M34 66 L26 74"></path>
         </g>
-        <circle cx="50" cy="16" r="2"/><circle cx="50" cy="84" r="2"/><circle cx="16" cy="50" r="2"/><circle cx="84" cy="50" r="2"/>
+        <circle cx="50" cy="16" r="2"></circle><circle cx="50" cy="84" r="2"></circle><circle cx="16" cy="50" r="2"></circle><circle cx="84" cy="50" r="2"></circle>
       </svg>
     </div>
     <h1>Ajeebland</h1>
@@ -191,15 +190,30 @@
   </div>
 
   <!-- UI -->
-  <button id="aboutBtn">about</button>
-  <div id="aboutPanel"><button id="aboutClose">×</button><div class="inner"><h2>about this object</h2><p id="aboutText"></p></div></div>
-  <div id="hint"></div>
-  <button id="skipBtn">skip ▸</button>
-  <button id="menuTab">≡</button>
+  <button id="aboutBtn" class="show">about</button>
+  <div id="aboutPanel" class=""><button id="aboutClose">×</button><div class="inner"><h2>about this object</h2><p id="aboutText">this is an analogue computer.
+
+it has inputs.
+the inputs here are all based on rotations.
+the input is one rotation;
+the output is the rotation of different cycles.
+
+there are 5 cycles in this object:
+
+— the solar cycle of 52 weeks.
+— a handcrank that turns the passage of time; it relates to the lunar cycle.
+— a cycle that governs the replenishment of the tissues.
+— the 99 attributes and characteristics associated with god.
+— and a cycle associated with my menstrual cycle.
+
+the gears contain the rations of the cycles. each spin of the handcrank turns the gears and the clock hands to show where in each cycle we are, and its relationship to one another.</p></div></div>
+  <div id="hint" class="show">left · the back, the future, the cycle</div>
+  <button id="skipBtn" class="">skip ▸</button>
+  <button id="menuTab" class="show">≡</button>
   <div id="toast"></div>
 
   <!-- Menu -->
-  <div id="menu">
+  <div id="menu" class="">
     <div class="head"><span class="t">behind the scenes</span><button class="x" id="menuClose">×</button></div>
     <div class="tabs">
       <div class="tab active" data-tab="look">Appearance</div>
@@ -207,9 +221,9 @@
       <div class="tab" data-tab="audio">Audio</div>
     </div>
     <div class="tabbody">
-      <div class="tabpane active" id="pane-look"></div>
-      <div class="tabpane" id="pane-text"></div>
-      <div class="tabpane" id="pane-audio"></div>
+      <div class="tabpane active" id="pane-look"><div class="grp"><h4>Dither &amp; camera</h4><div class="row"><label>Dither amount</label><input type="range" min="0" max="1" step="0.01"><span class="val">1.00</span></div><div class="row"><label>Pixel size</label><input type="range" min="1" max="16" step="0.5"><span class="val">16.0</span></div><div class="row"><label>Desaturation</label><input type="range" min="0" max="1" step="0.01"><span class="val">0.93</span></div><div class="row"><label>Vignette</label><input type="range" min="0" max="1" step="0.01"><span class="val">0.45</span></div></div><div class="grp"><h4>The halo (clear zone)</h4><div class="row"><label>Halo radius (m)</label><input type="range" min="0.3" max="2" step="0.05"><span class="val">0.30</span></div><div class="row"><label>Halo softness</label><input type="range" min="0.05" max="1.2" step="0.05"><span class="val">0.75</span></div></div><div class="grp"><h4>Colour &amp; tint</h4><div class="row"><label>Tint strength</label><input type="range" min="0" max="1" step="0.01"><span class="val">0.49</span></div><div class="row"><label>Base tint</label><input type="color"></div><div class="row"><label>Forward tint</label><input type="color"></div><div class="row"><label>Left (green)</label><input type="color"></div><div class="row"><label>Right (magenta)</label><input type="color"></div><div class="row"><label>Up (sky)</label><input type="color"></div><div class="row"><label>Down (earth)</label><input type="color"></div></div><div class="grp"><h4>The object</h4><div class="row"><label>Wireframe</label><input type="color"></div><div class="row"><label>Henna</label><input type="color"></div><div class="row"><label>Accent</label><input type="color"></div><div class="row"><label>Gear speed</label><input type="range" min="0" max="3" step="0.05"><span class="val">0.25</span></div></div><div class="grp"><h4>Text</h4><div class="row"><label>Text colour</label><input type="color"></div><div class="row"><label>Text size</label><input type="range" min="0.5" max="2" step="0.05"><span class="val">0.85</span></div><div class="row"><label>Text speed</label><input type="range" min="0.3" max="3" step="0.05"><span class="val">0.60</span></div><div class="row"><label>Line delay (s)</label><input type="range" min="0.8" max="6" step="0.1"><span class="val">1.7</span></div><div class="row"><label>Line spacing</label><input type="range" min="0.8" max="3" step="0.05"><span class="val">1.50</span></div><div class="row"><label>Lines visible</label><input type="range" min="1" max="6" step="1"><span class="val">4</span></div></div><div class="grp"><h4>Movement (walking)</h4><div class="row"><label>Steps move you closer/away</label><div class="switch on"><div class="k"></div></div></div><div class="row"><label>Step sensitivity</label><input type="range" min="0.4" max="3" step="0.05"><span class="val">2.65</span></div><div class="row"><label>Step length (m)</label><input type="range" min="0.1" max="1" step="0.05"><span class="val">0.80</span></div><div class="row"><label>Closest (m)</label><input type="range" min="0.4" max="2" step="0.05"><span class="val">0.80</span></div><div class="row"><label>Farthest (m)</label><input type="range" min="3" max="10" step="0.5"><span class="val">7.5</span></div></div><div class="grp"><h4>Interface</h4><div class="row"><label>Show hints</label><div class="switch on"><div class="k"></div></div></div><div class="row"><label>Use front camera in mirror</label><div class="switch on"><div class="k"></div></div></div><div class="row"><label>Try dual camera (both)</label><div class="switch on"><div class="k"></div></div></div><div class="row"><label>Invert left / right</label><div class="switch"><div class="k"></div></div></div><div class="row"><label>Invert up / down</label><div class="switch"><div class="k"></div></div></div></div></div>
+      <div class="tabpane" id="pane-text"><div class="txtblock"><label>Intro narration</label><textarea></textarea></div><div class="txtblock"><label>Guide bridge</label><textarea></textarea></div><div class="txtblock"><label>Forward — the guardian</label><textarea></textarea></div><div class="txtblock"><label>Left — the back &amp; cycles</label><textarea></textarea></div><div class="txtblock"><label>Right — the mirror</label><textarea></textarea></div><div class="txtblock"><label>Up — the sky</label><textarea></textarea></div><div class="txtblock"><label>Down — the earth</label><textarea></textarea></div><div class="txtblock"><label>About panel text</label><textarea style="min-height: 140px;"></textarea></div></div>
+      <div class="tabpane" id="pane-audio"><div class="grp"><h4>Ambient engine</h4><div class="row"><label>Drone on</label><div class="switch on"><div class="k"></div></div></div><div class="row"><label>Master volume</label><input type="range" min="0" max="1" step="0.01"><span class="val">0.55</span></div><div class="row"><label>Drone pitch (Hz)</label><input type="range" min="55" max="330" step="1"><span class="val">110</span></div><div class="row"><label>Shimmer</label><input type="range" min="0" max="1" step="0.01"><span class="val">0.50</span></div></div></div>
     </div>
     <div class="btnrow">
       <button class="mbtn" id="resetBtn">Reset</button>
@@ -221,7 +235,7 @@
 <!-- ============================ EMBEDDED CONFIG ============================ -->
 <script id="embedded-config">
 /*__CONFIG_START__*/
-window.EMBEDDED_CONFIG = null;
+window.EMBEDDED_CONFIG = {"look":{"ditherAmount":1,"pixelSize":16,"desaturation":0.93,"haloRadius":0.3,"haloSoftness":0.75,"tintStrength":0.49,"baseTint":"#cdd2c8","forwardTint":"#efe7d2","leftTint":"#1c5100","rightTint":"#7a00c5","upTint":"#00b9bd","downTint":"#9c4a00","wireColor":"#ece5d3","hennaColor":"#f3d9a8","accentColor":"#d9a441","textColor":"#f6f1e4","textSize":0.85,"textSpeed":0.6,"lineDelay":1.7,"gearSpeed":0.25,"vignette":0.45,"lineSpacing":1.5,"textWindow":4,"showHints":true,"mirrorFrontCam":true,"dualCamera":true,"invertLR":false,"invertUD":false,"stepEnabled":true,"stepSensitivity":2.65,"stepLength":0.8,"minDist":0.8,"maxDist":7.5},"audio":{"master":0.55,"droneOn":true,"droneFreq":110,"shimmer":0.5},"texts":{"intro":["Hello and welcome to Ajeebland,","This is a speculative piece of us —","a computing object existing in an alternate reality.","Functionally it calculates the relationship","between the planets, the body,","and the attributes of the spirit and god.","It is an object but also a living thing.","It is an object you can ask a question","and it will give answers.","It reveals knowledge.","In this world it is a reminder of the interdependency","of the macro- and the micro- scale.","There are rituals around using it,","around interacting with it.","Through this storefront I can only guide you so far.","This is only a portal, a dream, a representation of it.","If you want to know more,","you would have to look within."],"guide":["let me guide you.","look at what is around you."],"forward":["what is in between you and the piece?","this glass is a — is a — is a","guardian.","it guards the sacred space","between you and the object.","take a closer look, and listen —","and you will hear the music."],"left":["if you turn to the left long enough","you will see your back.","and the back is where the future lies.","the future's orientation is the cycle:","your back, your shoulders, your arms —","they shrink and they grow.","it's a cycle.","","in this world we care about different things.","if we make computers from a place","there are different kinds of calculation.","throughout antiquity many computers have been made,","each revealing the aspirations of its creators.","what if we built ones that show us","the knowledge of relations?"],"right":["if you turn to the right,","you see a mirror of yourself.","but —","it shows multiples, it shows multiples.","it's like an ebb and flow","of the multiples."],"up":["the sky is a great place.","it is expansive, and if you look closely","it will envelop you,","and you will be lifted high.","feel yourself being lifted up.","and the sky has planets and stars,","which remind us of things bigger than ourselves —","yet somehow we're connected."],"down":["the bottom is the earth,","which doesn't move,","but is very fertile","for roots to grow."],"about":"this is an analogue computer.\n\nit has inputs.\nthe inputs here are all based on rotations.\nthe input is one rotation;\nthe output is the rotation of different cycles.\n\nthere are 5 cycles in this object:\n\n— the solar cycle of 52 weeks.\n— a handcrank that turns the passage of time; it relates to the lunar cycle.\n— a cycle that governs the replenishment of the tissues.\n— the 99 attributes and characteristics associated with god.\n— and a cycle associated with my menstrual cycle.\n\nthe gears contain the rations of the cycles. each spin of the handcrank turns the gears and the clock hands to show where in each cycle we are, and its relationship to one another."}};
 /*__CONFIG_END__*/
 </script>
 
@@ -1616,6 +1630,7 @@ window.addEventListener('keydown',e=>{ if(e.key==='Enter' && State.phase==='idle
     if(e.key==='ArrowDown'){ e.preventDefault(); nudgeDist( CONFIG.look.stepLength); }
   }
 });
-</script>
-</body>
-</html>
+</script><div id="goog-gt-tt" class="skiptranslate" dir="ltr"><div style="padding: 8px;"><div><div class="logo"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciLz4=" width="20" height="20" alt="Google Translate"></div></div></div><div class="top" style="padding: 8px; float: left; width: 100%;"><h1 class="title gray">Original text</h1></div><div class="middle" style="padding: 8px;"><div class="original-text"></div></div><div class="bottom" style="padding: 8px;"><div class="activity-links"><span class="activity-link">Contribute a better translation</span><span class="activity-link"></span></div><div class="started-activity-container"><hr style="color: #CCC; background-color: #CCC; height: 1px; border: none;"><div class="activity-root"></div></div></div><div class="status-message" style="display: none;"></div></div>
+
+
+<div class="goog-te-spinner-pos"><div class="goog-te-spinner-animation"><svg xmlns="http://www.w3.org/2000/svg" class="goog-te-spinner" width="96px" height="96px" viewBox="0 0 66 66"><circle class="goog-te-spinner-path" fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30"></circle></svg></div></div></body></html>
