@@ -45,13 +45,8 @@
     position:relative; z-index:1;
     margin:auto; display:flex; flex-direction:column; align-items:center; gap:16px;
     max-width:392px; width:100%; padding:30px 26px 26px;
-    background:rgba(238,247,250,.34);
-    -webkit-backdrop-filter:blur(3px) saturate(1.1); backdrop-filter:blur(3px) saturate(1.1);
-    /* chunky, slightly-pixel DIY border */
-    border:3px solid rgba(255,255,255,.85);
-    outline:3px solid rgba(120,150,165,.5); outline-offset:0;
-    border-radius:4px;
-    box-shadow:6px 6px 0 rgba(90,120,135,.35), inset 0 1px 0 rgba(255,255,255,.9);
+    background:transparent;
+    border:none; outline:none; box-shadow:none;
     color:#243038;
   }
   #start h1{ font-weight:500; font-size:29px; letter-spacing:.4px; margin:2px 0 0; color:#1f2a31; }
@@ -67,12 +62,14 @@
   }
   #start .glyph canvas{ width:88px; height:88px; image-rendering:pixelated; image-rendering:crisp-edges; }
   #enterBtn{
-    margin-top:4px; padding:13px 32px; border-radius:4px;
-    background:var(--accent); color:#1a1206; border:3px solid rgba(255,255,255,.85);
+    margin-top:4px; padding:13px 32px; border-radius:14px;
+    background:transparent; color:#1a1a1a; border:3px solid rgba(255,255,255,.85);
     font-family:inherit; font-weight:600; font-size:15px; letter-spacing:.4px;
-    cursor:pointer; box-shadow:4px 4px 0 rgba(150,110,35,.5);
+    cursor:pointer; box-shadow:none;
+    transition:background .18s ease, color .18s ease;
   }
-  #enterBtn:active{ transform:translate(2px,2px); box-shadow:2px 2px 0 rgba(150,110,35,.5); }
+  #enterBtn:hover{ background:#ffffff; color:#1a1a1a; }
+  #enterBtn:active{ transform:translate(1px,1px); }
   #start .volume{
     display:flex; align-items:center; gap:9px; justify-content:center;
     font-weight:400; font-size:12.5px; color:#2f6a80; max-width:320px; line-height:1.45; margin-top:2px;
@@ -192,29 +189,45 @@
     display:flex; align-items:center; justify-content:center;
   }
   #menuTab.show{ opacity:.7; pointer-events:auto; }
+
+  /* behind-the-scenes menu removed */
+  #menuTab, #menu{ display:none !important; }
 </style>
-</head>
+<style>:is([id*='google_ads_iframe'],[id*='taboola-'],.taboolaHeight,.taboola-placeholder,#top-ad,#credential_picker_container,#credentials-picker-container,#credential_picker_iframe,[id*='google-one-tap-iframe'],#google-one-tap-popup-container,.google-one-tap__module,.google-one-tap-modal-div,#amp_floatingAdDiv,#ez-content-blocker-container) {display:none!important;min-height:0!important;height:0!important;}</style></head>
 <body>
   <video id="cam" playsinline="" autoplay="" muted=""></video>
   <video id="selfcam" playsinline="" autoplay="" muted=""></video>
-  <canvas id="scene" class="layer" width="804" height="1348" style="width: 402px; height: 674px;"></canvas>
+  <canvas id="scene" class="layer" width="1920" height="900" style="width: 1280px; height: 600px;"></canvas>
 
   <!-- Start / permissions -->
   <div id="start" style="display: flex;">
-   <canvas id="startIce"></canvas>
+   <canvas id="startIce" width="128" height="90"></canvas>
    <div class="startInner">
-    <div class="glyph"><canvas id="startStar" width="172" height="172"></canvas></div>
-    <h1>Najeeba Ahmed</h1>
     <div class="sub">A portal — hold your phone up to the glass, and let the object speak.</div>
-    <button id="enterBtn">enter the portal</button>
-    <div id="permNote">Please turn your phone's volume up — this piece is meant to be heard. This experience uses your camera and motion sensors, and is best on a phone held upright. Press <b>m</b> at any time for the behind-the-scenes menu.</div>
+    <button id="enterBtn">enter</button>
+    <div id="permNote">Please turn your phone's volume up — this piece is meant to be heard. This experience uses your camera and motion sensors, and is best on a phone held upright.</div>
    </div>
   </div>
 
   <!-- UI -->
-  <button id="aboutBtn" class="">about</button>
-  <div id="aboutPanel" class=""><button id="aboutClose">×</button><div class="inner"><h2>about this object</h2><p id="aboutText"></p></div></div>
-  <div id="hint" class="show">left · the back, the future, the cycle</div>
+  <button id="aboutBtn" class="show">about</button>
+  <div id="aboutPanel" class=""><button id="aboutClose">×</button><div class="inner"><h2>about this object</h2><p id="aboutText">this is an analogue computer.
+
+it has inputs.
+the inputs here are all based on rotations.
+the input is one rotation;
+the output is the rotation of different cycles.
+
+there are 5 cycles in this object:
+
+— the solar cycle of 52 weeks.
+— a handcrank that turns the passage of time; it relates to the lunar cycle.
+— a cycle that governs the replenishment of the tissues.
+— the 99 attributes and characteristics associated with god.
+— and a cycle associated with my menstrual cycle.
+
+the gears contain the rations of the cycles. each spin of the handcrank turns the gears and the clock hands to show where in each cycle we are, and its relationship to one another.</p></div></div>
+  <div id="hint" class="">left · the back, the future, the cycle</div>
   <button id="menuTab" class="show">≡</button>
   <div id="toast"></div>
 
@@ -222,13 +235,13 @@
   <div id="menu" class="">
     <div class="head"><span class="t">behind the scenes</span><button class="x" id="menuClose">×</button></div>
     <div class="tabs">
-      <div class="tab active" data-tab="look">Appearance</div>
-      <div class="tab" data-tab="text">Text</div>
+      <div class="tab" data-tab="look">Appearance</div>
+      <div class="tab active" data-tab="text">Text</div>
       <div class="tab" data-tab="audio">Audio</div>
     </div>
     <div class="tabbody">
-      <div class="tabpane active" id="pane-look"><div class="grp"><h4>Dither &amp; camera</h4><div class="row"><label>Dither amount</label><input type="range" min="0" max="1" step="0.01"><span class="val">1.00</span></div><div class="row"><label>Pixel size</label><input type="range" min="1" max="16" step="0.5"><span class="val">16.0</span></div><div class="row"><label>Desaturation</label><input type="range" min="0" max="1" step="0.01"><span class="val">0.93</span></div><div class="row"><label>Vignette</label><input type="range" min="0" max="1" step="0.01"><span class="val">0.45</span></div></div><div class="grp"><h4>The halo (clear zone)</h4><div class="row"><label>Halo radius (m)</label><input type="range" min="0.3" max="2" step="0.05"><span class="val">0.30</span></div><div class="row"><label>Halo softness</label><input type="range" min="0.05" max="1.2" step="0.05"><span class="val">0.75</span></div></div><div class="grp"><h4>Colour &amp; tint</h4><div class="row"><label>Tint strength</label><input type="range" min="0" max="1" step="0.01"><span class="val">0.49</span></div><div class="row"><label>Base tint</label><input type="color"></div><div class="row"><label>Forward tint</label><input type="color"></div><div class="row"><label>Left (green)</label><input type="color"></div><div class="row"><label>Right (magenta)</label><input type="color"></div><div class="row"><label>Up (sky)</label><input type="color"></div><div class="row"><label>Down (earth)</label><input type="color"></div></div><div class="grp"><h4>The object</h4><div class="row"><label>Wireframe</label><input type="color"></div><div class="row"><label>Henna</label><input type="color"></div><div class="row"><label>Accent</label><input type="color"></div><div class="row"><label>Gear speed</label><input type="range" min="0" max="3" step="0.05"><span class="val">0.25</span></div></div><div class="grp"><h4>Text</h4><div class="row"><label>Text colour</label><input type="color"></div><div class="row"><label>Text size</label><input type="range" min="0.5" max="2" step="0.05"><span class="val">0.85</span></div><div class="row"><label>Text speed</label><input type="range" min="0.3" max="3" step="0.05"><span class="val">0.60</span></div><div class="row"><label>Line delay (s)</label><input type="range" min="0.8" max="6" step="0.1"><span class="val">1.7</span></div><div class="row"><label>Line spacing</label><input type="range" min="0.8" max="3" step="0.05"><span class="val">1.50</span></div><div class="row"><label>Lines visible</label><input type="range" min="1" max="6" step="1"><span class="val">4</span></div></div><div class="grp"><h4>Movement (walking)</h4><div class="row"><label>Steps move you closer/away</label><div class="switch on"><div class="k"></div></div></div><div class="row"><label>Step sensitivity</label><input type="range" min="0.4" max="3" step="0.05"><span class="val">2.65</span></div><div class="row"><label>Step length (m)</label><input type="range" min="0.1" max="1" step="0.05"><span class="val">0.80</span></div><div class="row"><label>Closest (m)</label><input type="range" min="0.4" max="2" step="0.05"><span class="val">0.80</span></div><div class="row"><label>Farthest (m)</label><input type="range" min="3" max="10" step="0.5"><span class="val">7.5</span></div></div><div class="grp"><h4>Interface</h4><div class="row"><label>Show hints</label><div class="switch on"><div class="k"></div></div></div><div class="row"><label>Use front camera in mirror</label><div class="switch on"><div class="k"></div></div></div><div class="row"><label>Try dual camera (both)</label><div class="switch on"><div class="k"></div></div></div><div class="row"><label>Invert left / right</label><div class="switch"><div class="k"></div></div></div><div class="row"><label>Invert up / down</label><div class="switch"><div class="k"></div></div></div></div></div>
-      <div class="tabpane" id="pane-text"><div class="txtblock"><label>Intro narration</label><textarea></textarea></div><div class="txtblock"><label>Guide bridge</label><textarea></textarea></div><div class="txtblock"><label>Forward — the guardian</label><textarea></textarea></div><div class="txtblock"><label>Left — the back &amp; cycles</label><textarea></textarea></div><div class="txtblock"><label>Right — the mirror</label><textarea></textarea></div><div class="txtblock"><label>Up — the sky</label><textarea></textarea></div><div class="txtblock"><label>Down — the earth</label><textarea></textarea></div><div class="txtblock"><label>About panel text</label><textarea style="min-height: 140px;"></textarea></div></div>
+      <div class="tabpane" id="pane-look"><div class="grp"><h4>Dither &amp; camera</h4><div class="row"><label>Dither amount</label><input type="range" min="0" max="1" step="0.01"><span class="val">0.36</span></div><div class="row"><label>Pixel size</label><input type="range" min="1" max="16" step="0.5"><span class="val">6.5</span></div><div class="row"><label>Desaturation</label><input type="range" min="0" max="1" step="0.01"><span class="val">0.93</span></div><div class="row"><label>Vignette</label><input type="range" min="0" max="1" step="0.01"><span class="val">0.45</span></div></div><div class="grp"><h4>The halo (clear zone)</h4><div class="row"><label>Halo radius (m)</label><input type="range" min="0.3" max="2" step="0.05"><span class="val">0.30</span></div><div class="row"><label>Halo softness</label><input type="range" min="0.05" max="1.2" step="0.05"><span class="val">0.75</span></div></div><div class="grp"><h4>Colour &amp; tint</h4><div class="row"><label>Tint strength</label><input type="range" min="0" max="1" step="0.01"><span class="val">0.36</span></div><div class="row"><label>Base tint</label><input type="color"></div><div class="row"><label>Forward tint</label><input type="color"></div><div class="row"><label>Left (green)</label><input type="color"></div><div class="row"><label>Right (magenta)</label><input type="color"></div><div class="row"><label>Up (sky)</label><input type="color"></div><div class="row"><label>Down (earth)</label><input type="color"></div><div class="row"><label>Rear (soft light)</label><input type="color"></div></div><div class="grp"><h4>Rear star &amp; decoration</h4><div class="row"><label>Rear star colour</label><input type="color"></div><div class="row"><label>Rear star size</label><input type="range" min="1" max="8" step="0.1"><span class="val">3.4</span></div><div class="row"><label>Decoration colour</label><input type="color"></div><div class="row"><label>Decoration size</label><input type="range" min="0.3" max="2.5" step="0.05"><span class="val">0.40</span></div><div class="row"><label>Decoration count</label><input type="range" min="0" max="64" step="1"><span class="val">7</span></div></div><div class="grp"><h4>The object</h4><div class="row"><label>Wireframe</label><input type="color"></div><div class="row"><label>Henna</label><input type="color"></div><div class="row"><label>Accent</label><input type="color"></div><div class="row"><label>Gear speed</label><input type="range" min="0" max="3" step="0.05"><span class="val">0.25</span></div></div><div class="grp"><h4>Text</h4><div class="row"><label>Text colour</label><input type="color"></div><div class="row"><label>Text size</label><input type="range" min="0.5" max="2" step="0.05"><span class="val">0.85</span></div><div class="row"><label>Text speed</label><input type="range" min="0.3" max="3" step="0.05"><span class="val">0.60</span></div><div class="row"><label>Line delay (s)</label><input type="range" min="0.8" max="6" step="0.1"><span class="val">1.7</span></div><div class="row"><label>Line spacing</label><input type="range" min="0.8" max="3" step="0.05"><span class="val">1.50</span></div><div class="row"><label>Lines visible</label><input type="range" min="1" max="6" step="1"><span class="val">4</span></div></div><div class="grp"><h4>The object — size &amp; distance</h4><div class="row"><label>Object size</label><input type="range" min="0.3" max="3" step="0.05"><span class="val">1.00</span></div><div class="row"><label>Distance (m)</label><input type="range" min="0.8" max="6" step="0.05"><span class="val">2.20</span></div></div><div class="grp"><h4>Interface</h4><div class="row"><label>Show hints</label><div class="switch on"><div class="k"></div></div></div><div class="row"><label>Use front camera in mirror</label><div class="switch on"><div class="k"></div></div></div><div class="row"><label>Try dual camera (both)</label><div class="switch on"><div class="k"></div></div></div><div class="row"><label>Invert left / right</label><div class="switch"><div class="k"></div></div></div><div class="row"><label>Invert up / down</label><div class="switch"><div class="k"></div></div></div></div></div>
+      <div class="tabpane active" id="pane-text"><div class="txtblock"><label>Forward — opening lines</label><textarea></textarea></div><div class="txtblock"><label>Forward — the guardian</label><textarea></textarea></div><div class="txtblock"><label>Left — the back &amp; cycles</label><textarea></textarea></div><div class="txtblock"><label>Right — the mirror</label><textarea></textarea></div><div class="txtblock"><label>Up — the sky</label><textarea></textarea></div><div class="txtblock"><label>Down — the sinking earth</label><textarea></textarea></div><div class="txtblock"><label>Rear — the portal / look within</label><textarea></textarea></div><div class="txtblock"><label>About panel text</label><textarea style="min-height: 160px;"></textarea></div></div>
       <div class="tabpane" id="pane-audio"><div class="grp"><h4>Ambient engine</h4><div class="row"><label>Drone on</label><div class="switch on"><div class="k"></div></div></div><div class="row"><label>Master volume</label><input type="range" min="0" max="1" step="0.01"><span class="val">0.55</span></div><div class="row"><label>Drone pitch (Hz)</label><input type="range" min="55" max="330" step="1"><span class="val">110</span></div><div class="row"><label>Shimmer</label><input type="range" min="0" max="1" step="0.01"><span class="val">0.50</span></div></div></div>
     </div>
     <div class="btnrow">
@@ -241,7 +254,7 @@
 <!-- ============================ EMBEDDED CONFIG ============================ -->
 <script id="embedded-config">
 /*__CONFIG_START__*/
-window.EMBEDDED_CONFIG = {"look":{"ditherAmount":1,"pixelSize":16,"desaturation":0.93,"haloRadius":0.3,"haloSoftness":0.75,"tintStrength":0.49,"baseTint":"#cdd2c8","forwardTint":"#efe7d2","leftTint":"#1c5100","rightTint":"#7a00c5","upTint":"#00b9bd","downTint":"#9c4a00","wireColor":"#ece5d3","hennaColor":"#f3d9a8","accentColor":"#d9a441","textColor":"#f6f1e4","textSize":0.85,"textSpeed":0.6,"lineDelay":1.7,"gearSpeed":0.25,"vignette":0.45,"lineSpacing":1.5,"textWindow":4,"showHints":true,"mirrorFrontCam":true,"dualCamera":true,"invertLR":false,"invertUD":false,"stepEnabled":true,"stepSensitivity":2.65,"stepLength":0.8,"minDist":0.8,"maxDist":7.5},"audio":{"master":0.55,"droneOn":true,"droneFreq":110,"shimmer":0.5},"texts":{"intro":["Hello and welcome to Ajeebland,","This is a speculative piece of us —","a computing object existing in an alternate reality.","Functionally it calculates the relationship","between the planets, the body,","and the attributes of the spirit and god.","It is an object but also a living thing.","It is an object you can ask a question","and it will give answers.","It reveals knowledge.","In this world it is a reminder of the interdependency","of the macro- and the micro- scale.","There are rituals around using it,","around interacting with it.","Through this storefront I can only guide you so far.","This is only a portal, a dream, a representation of it.","If you want to know more,","you would have to look within."],"guide":["let me guide you.","look at what is around you."],"forward":["what is in between you and the piece?","this glass is a — is a — is a","guardian.","it guards the sacred space","between you and the object.","take a closer look, and listen —","and you will hear the music."],"left":["if you turn to the left long enough","you will see your back.","and the back is where the future lies.","the future's orientation is the cycle:","your back, your shoulders, your arms —","they shrink and they grow.","it's a cycle.","","in this world we care about different things.","if we make computers from a place","there are different kinds of calculation.","throughout antiquity many computers have been made,","each revealing the aspirations of its creators.","what if we built ones that show us","the knowledge of relations?"],"right":["if you turn to the right,","you see a mirror of yourself.","but —","it shows multiples, it shows multiples.","it's like an ebb and flow","of the multiples."],"up":["the sky is a great place.","it is expansive, and if you look closely","it will envelop you,","and you will be lifted high.","feel yourself being lifted up.","and the sky has planets and stars,","which remind us of things bigger than ourselves —","yet somehow we're connected."],"down":["the bottom is the earth,","which doesn't move,","but is very fertile","for roots to grow."],"about":"this is an analogue computer.\n\nit has inputs.\nthe inputs here are all based on rotations.\nthe input is one rotation;\nthe output is the rotation of different cycles.\n\nthere are 5 cycles in this object:\n\n— the solar cycle of 52 weeks.\n— a handcrank that turns the passage of time; it relates to the lunar cycle.\n— a cycle that governs the replenishment of the tissues.\n— the 99 attributes and characteristics associated with god.\n— and a cycle associated with my menstrual cycle.\n\nthe gears contain the rations of the cycles. each spin of the handcrank turns the gears and the clock hands to show where in each cycle we are, and its relationship to one another."}};
+window.EMBEDDED_CONFIG = {"look":{"ditherAmount":0.36,"pixelSize":6.5,"desaturation":0.93,"haloRadius":0.3,"haloSoftness":0.75,"tintStrength":0.36,"baseTint":"#cdd2c8","forwardTint":"#efe7d2","leftTint":"#81856b","rightTint":"#7e5f91","upTint":"#00c4c7","downTint":"#7a5738","rearTint":"#f3ede0","rearStarColor":"#dedede","rearStarSize":3.4,"decoColor":"#e9dcc0","decoScale":0.4,"decoCount":7,"objectScale":1,"objectDist":2.2,"wireColor":"#ece5d3","hennaColor":"#f3d9a8","accentColor":"#d9a441","textColor":"#f6f1e4","textSize":0.85,"textSpeed":0.6,"lineDelay":1.7,"gearSpeed":0.25,"vignette":0.45,"lineSpacing":1.5,"textWindow":4,"showHints":true,"mirrorFrontCam":true,"dualCamera":true,"invertLR":false,"invertUD":false,"stepEnabled":true,"stepSensitivity":2.65,"stepLength":0.8,"minDist":0.8,"maxDist":7.5},"audio":{"master":0.55,"droneOn":true,"droneFreq":110,"shimmer":0.5},"texts":{"intro":["Hello and welcome to Ajeebland,","This is a speculative piece of us —","a computing object existing in an alternate reality.","Functionally it calculates the relationship","between the planets, the body,","and the attributes of the spirit and god.","It is an object but also a living thing.","It is an object you can ask a question","and it will give answers.","It reveals knowledge.","In this world it is a reminder of the interdependency","of the macro- and the micro- scale.","There are rituals around using it,","around interacting with it.","Through this storefront I can only guide you so far.","This is only a portal, a dream, a representation of it.","If you want to know more,","you would have to look within."],"guide":["let me guide you.","look at what is around you."],"forward":["what is in between you and the piece?","this glass is a — is a — is a","guardian.","it guards the sacred space","between you and the object.","take a closer look, and listen —","and you will hear the music."],"left":["if you turn to the left long enough","you will see your back.","and the back is where the future lies.","the future's orientation is the cycle:","your back, your shoulders, your arms —","they shrink and they grow.","it's a cycle.","","in this world we care about different things.","if we make computers from a place","there are different kinds of calculation.","throughout antiquity many computers have been made,","each revealing the aspirations of its creators.","what if we built ones that show us","the knowledge of relations?"],"right":["if you turn to the right,","you see a mirror of yourself.","but —","it shows multiples, it shows multiples.","it's like an ebb and flow","of the multiples."],"up":["the sky is a great place.","it is expansive, and if you look closely","it will envelop you,","and you will be lifted high.","feel yourself being lifted up.","and the sky has planets and stars,","which remind us of things bigger than ourselves —","yet somehow we're connected."],"down":["the bottom is the earth,","which doesn't move,","but is very fertile","for roots to grow."],"rear":["Unfortunately through this storefront","I can only guide you to a certain extent.","This is only a portal, a dream,","a representation of it.","If you want to know more","you would have to look within."],"about":"this is an analogue computer.\n\nit has inputs.\nthe inputs here are all based on rotations.\nthe input is one rotation;\nthe output is the rotation of different cycles.\n\nthere are 5 cycles in this object:\n\n— the solar cycle of 52 weeks.\n— a handcrank that turns the passage of time; it relates to the lunar cycle.\n— a cycle that governs the replenishment of the tissues.\n— the 99 attributes and characteristics associated with god.\n— and a cycle associated with my menstrual cycle.\n\nthe gears contain the rations of the cycles. each spin of the handcrank turns the gears and the clock hands to show where in each cycle we are, and its relationship to one another."}};
 /*__CONFIG_END__*/
 </script>
 
@@ -2319,7 +2332,7 @@ const menu=document.getElementById('menu');
 function toggleMenu(force){ const open = force!==undefined?force: !menu.classList.contains('open'); menu.classList.toggle('open',open); }
 document.getElementById('menuClose').onclick=()=>toggleMenu(false);
 document.getElementById('menuTab').onclick=()=>toggleMenu();
-window.addEventListener('keydown',e=>{ if(e.key==='m'||e.key==='M'){ toggleMenu(); } if(e.key==='Escape'){ toggleMenu(false); document.getElementById('aboutPanel').classList.remove('open'); } });
+window.addEventListener('keydown',e=>{ if(e.key==='Escape'){ toggleMenu(false); document.getElementById('aboutPanel').classList.remove('open'); } });
 
 // tabs
 document.querySelectorAll('.tab').forEach(t=> t.onclick=()=>{
@@ -2528,4 +2541,5 @@ window.addEventListener('keydown',e=>{ if(e.key==='Enter' && State.phase==='idle
 </script><div id="goog-gt-tt" class="skiptranslate" dir="ltr"><div style="padding: 8px;"><div><div class="logo"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciLz4=" width="20" height="20" alt="Google Translate"></div></div></div><div class="top" style="padding: 8px; float: left; width: 100%;"><h1 class="title gray">Original text</h1></div><div class="middle" style="padding: 8px;"><div class="original-text"></div></div><div class="bottom" style="padding: 8px;"><div class="activity-links"><span class="activity-link">Contribute a better translation</span><span class="activity-link"></span></div><div class="started-activity-container"><hr style="color: #CCC; background-color: #CCC; height: 1px; border: none;"><div class="activity-root"></div></div></div><div class="status-message" style="display: none;"></div></div>
 
 
-<div class="goog-te-spinner-pos"><div class="goog-te-spinner-animation"><svg xmlns="http://www.w3.org/2000/svg" class="goog-te-spinner" width="96px" height="96px" viewBox="0 0 66 66"><circle class="goog-te-spinner-path" fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30"></circle></svg></div></div></body></html>
+<div class="goog-te-spinner-pos"><div class="goog-te-spinner-animation"><svg xmlns="http://www.w3.org/2000/svg" class="goog-te-spinner" width="96px" height="96px" viewBox="0 0 66 66"><circle class="goog-te-spinner-path" fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30"></circle></svg></div></div>
+</body></html>
